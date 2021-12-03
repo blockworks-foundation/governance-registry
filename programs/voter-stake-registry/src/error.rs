@@ -17,9 +17,11 @@ pub enum ErrorCode {
     #[msg("")]
     DepositEntryIndexOutOfBounds, // 306
     #[msg("")]
-    DepositEntryIndexAlreadInUse, // 306
+    DepositEntryIndexAlreadInUse, // 307
     #[msg("")]
-    InsufficientVestedTokens, // 308
+    UnusedDepositEntryIndex, // 308
+    #[msg("")]
+    InsufficientVestedTokens, // 309
     #[msg("")]
     UnableToConvert,
     #[msg("")]

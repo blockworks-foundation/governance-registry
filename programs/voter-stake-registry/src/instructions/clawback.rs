@@ -30,7 +30,7 @@ pub fn clawback(ctx: Context<WithdrawOrClawback>, deposit_entry_index: u8) -> Re
     // Get the deposit being withdrawn from.
     let curr_ts = registrar.clock_unix_timestamp();
     let deposit_entry = &mut voter.deposits[deposit_entry_index as usize];
-    require!(deposit_entry.is_used, DepositEntryIndexOutOfBounds);
+    require!(deposit_entry.is_used, UnusedDepositEntryIndex);
     require!(
         deposit_entry.allow_clawback,
         ErrorCode::ClawbackNotAllowedOnDeposit
