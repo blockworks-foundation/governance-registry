@@ -27,7 +27,7 @@ pub enum ErrorCode {
     #[msg("")]
     InvalidDays,
     #[msg("")]
-    RateNotZero,
+    RateAtIndexAlreadySet,
     #[msg("")]
     InvalidIndex,
     #[msg("Exchange rate decimals cannot be larger than registrar decimals")]
