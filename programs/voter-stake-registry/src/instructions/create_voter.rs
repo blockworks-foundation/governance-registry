@@ -21,10 +21,12 @@ pub struct CreateVoter<'info> {
         space = 8 + size_of::<Voter>(),
     )]
     pub voter: AccountLoader<'info, Voter>,
+    // TODO would be this different than payer?
     pub voter_authority: Signer<'info>,
 
     /// The token_owner_record for the voter_authority.
     ///
+    /// FIXME the instruction does read and verify it
     /// The instruction does not read it, but providing it here ensures that
     /// users don't accidentally create voters and deposit funds without having
     /// a valid token_owner_record. It is impossible to withdraw funds without
@@ -46,6 +48,7 @@ pub struct CreateVoter<'info> {
         payer = payer,
         space = 150,
     )]
+    // TODO why not space = 8 + size_of::<VoterWeightRecord>(),
     pub voter_weight_record: Account<'info, VoterWeightRecord>,
 
     #[account(mut)]
@@ -72,6 +75,7 @@ pub fn create_voter(
     // Forbid creating voter accounts from CPI. The goal is to make automation
     // impossible that weakens some of the limitations intentionally imposed on
     // locked tokens.
+    // TODO e.g. secondary market for locked tokens
     {
         let ixns = ctx.accounts.instructions.to_account_info();
         let current_index = tx_instructions::load_current_index_checked(&ixns)? as usize;
