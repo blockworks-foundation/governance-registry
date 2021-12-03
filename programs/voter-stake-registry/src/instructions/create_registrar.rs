@@ -19,7 +19,7 @@ pub struct CreateRegistrar<'info> {
     )]
     pub registrar: Box<Account<'info, Registrar>>,
 
-    // TODO: what is the difference between realm v governance_program_id v realm_authority v payer
+    // TODO: what is the difference between realm v governance_program_id v realm_authority
     // TODO: I would imagine all of them to be the same?
     /// An spl-governance realm
     ///
