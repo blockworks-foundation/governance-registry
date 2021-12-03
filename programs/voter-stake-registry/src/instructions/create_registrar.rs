@@ -19,6 +19,8 @@ pub struct CreateRegistrar<'info> {
     )]
     pub registrar: Box<Account<'info, Registrar>>,
 
+    // TODO: what is the difference between realm v governance_program_id v realm_authority v payer
+    // TODO: I would imagine all of them to be the same?
     /// An spl-governance realm
     ///
     /// realm is validated in the instruction:
@@ -70,6 +72,7 @@ pub fn create_registrar(
 
     // Verify that "realm_authority" is the expected authority on "realm"
     // and that the mint matches one of the realm mints too.
+    // FIXME variable name shadowing the module name
     let realm = realm::get_realm_data_for_governing_token_mint(
         &registrar.governance_program_id,
         &ctx.accounts.realm.to_account_info(),
