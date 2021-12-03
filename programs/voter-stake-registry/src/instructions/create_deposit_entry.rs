@@ -31,7 +31,7 @@ pub fn create_deposit_entry(
     periods: i32,
     allow_clawback: bool,
 ) -> Result<()> {
-    msg!("--------create_deposit--------");
+    msg!("--------create_deposit_entry--------");
 
     // Load accounts.
     let registrar = &ctx.accounts.registrar;
@@ -50,10 +50,10 @@ pub fn create_deposit_entry(
     // Get and set up the deposit entry.
     require!(
         voter.deposits.len() > deposit_entry_index as usize,
-        InvalidDepositEntryIndex
+        DepositEntryIndexOutOfBounds
     );
     let d_entry = &mut voter.deposits[deposit_entry_index as usize];
-    require!(!d_entry.is_used, InvalidDepositEntryIndex);
+    require!(!d_entry.is_used, DepositEntryIndexOutOfBounds);
 
     *d_entry = DepositEntry::default();
     d_entry.is_used = true;

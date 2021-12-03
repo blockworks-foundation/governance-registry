@@ -15,9 +15,11 @@ pub enum ErrorCode {
     #[msg("")]
     VotingTokenNonZero,
     #[msg("")]
-    InvalidDepositEntryIndex, // 306
+    DepositEntryIndexOutOfBounds, // 306
     #[msg("")]
-    InsufficientVestedTokens, // 307
+    DepositEntryIndexAlreadInUse, // 306
+    #[msg("")]
+    InsufficientVestedTokens, // 308
     #[msg("")]
     UnableToConvert,
     #[msg("")]

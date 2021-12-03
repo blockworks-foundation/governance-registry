@@ -53,7 +53,7 @@ impl<'info> Deposit<'info> {
 /// `deposit_entry_index`: Index of the deposit entry.
 /// `amount`: Number of native tokens to transfer.
 pub fn deposit(ctx: Context<Deposit>, deposit_entry_index: u8, amount: u64) -> Result<()> {
-    msg!("--------update_deposit--------");
+    msg!("--------deposit--------");
     let registrar = &ctx.accounts.registrar;
     let voter = &mut ctx.accounts.voter.load_mut()?;
 
@@ -69,12 +69,12 @@ pub fn deposit(ctx: Context<Deposit>, deposit_entry_index: u8, amount: u64) -> R
 
     require!(
         voter.deposits.len() > deposit_entry_index as usize,
-        InvalidDepositEntryIndex
+        DepositEntryIndexOutOfBounds
     );
     let d_entry = &mut voter.deposits[deposit_entry_index as usize];
-    require!(d_entry.is_used, InvalidDepositEntryIndex);
+    require!(d_entry.is_used, DepositEntryIndexAlreadInUse);
 
-    // Deposit tokens into the registrar.
+    // Deposit tokens into the deposit specific vault owned by the registrar.
     token::transfer(ctx.accounts.transfer_ctx(), amount)?;
     d_entry.amount_deposited_native += amount;
 

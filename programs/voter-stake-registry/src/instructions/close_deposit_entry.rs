@@ -16,15 +16,15 @@ pub struct CloseDepositEntry<'info> {
 /// If the deposit entry has `allow_clawback` set, it can only be closed once
 /// the lockup period has expired.
 pub fn close_deposit_entry(ctx: Context<CloseDepositEntry>, deposit_entry_index: u8) -> Result<()> {
-    msg!("--------close_deposit--------");
+    msg!("--------close_deposit_entry--------");
     let voter = &mut ctx.accounts.voter.load_mut()?;
 
     require!(
         voter.deposits.len() > deposit_entry_index as usize,
-        InvalidDepositEntryIndex
+        DepositEntryIndexOutOfBounds
     );
     let d = &mut voter.deposits[deposit_entry_index as usize];
-    require!(d.is_used, InvalidDepositEntryIndex);
+    require!(d.is_used, DepositEntryIndexOutOfBounds);
     require!(d.amount_deposited_native == 0, VotingTokenNonZero);
 
     // Deposits that have clawback enabled are guaranteed to live until the end

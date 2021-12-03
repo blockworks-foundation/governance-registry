@@ -58,5 +58,8 @@ pub fn create_exchange_rate(
         RateAtIndexAlreadySet
     );
     registrar.rates[idx as usize] = registrar.new_rate(ctx.accounts.mint.key(), decimals, rate)?;
+
+    // TODO housekeeping check that rate for a particular mint is set only once
+
     Ok(())
 }
