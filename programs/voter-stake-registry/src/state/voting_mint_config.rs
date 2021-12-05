@@ -26,6 +26,9 @@ pub struct VotingMintConfig {
     /// - if common and mint have the same number of decimals, this is the same as 'rate'
     /// - common decimals = 6, mint decimals = 3, rate = 5 -> 500
     pub conversion_factor: u64,
+
+    /// The authority that is allowed to push grants into voters
+    pub grant_authority: Pubkey,
 }
 
 impl VotingMintConfig {

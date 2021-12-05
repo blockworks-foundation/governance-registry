@@ -105,6 +105,7 @@ impl AddinCookie {
         index: u16,
         mint: &MintCookie,
         rate: u64,
+        grant_authority: Option<Pubkey>,
     ) -> VotingMintConfigCookie {
         let deposit_mint = mint.pubkey.unwrap();
         let vault = spl_associated_token_account::get_associated_token_address(
@@ -117,6 +118,7 @@ impl AddinCookie {
                 idx: index,
                 rate,
                 decimals: mint.decimals,
+                grant_authority,
             },
         );
 

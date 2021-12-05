@@ -46,7 +46,7 @@ pub struct CreateVoter<'info> {
 }
 
 /// Returns if the anchor discriminator on the account is still unset
-fn is_freshly_initialized(account_info: &AccountInfo) -> Result<bool> {
+pub fn is_freshly_initialized(account_info: &AccountInfo) -> Result<bool> {
     let data = account_info.try_borrow_data()?;
     let mut disc_bytes = [0u8; 8];
     disc_bytes.copy_from_slice(&data[..8]);

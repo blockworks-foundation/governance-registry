@@ -39,7 +39,15 @@ async fn test_voting() -> Result<(), TransportError> {
         .create_registrar(&realm, &realm_authority, payer)
         .await;
     let mngo_voting_mint = addin
-        .configure_voting_mint(&registrar, &realm_authority, payer, 0, &context.mints[0], 2)
+        .configure_voting_mint(
+            &registrar,
+            &realm_authority,
+            payer,
+            0,
+            &context.mints[0],
+            2,
+            None,
+        )
         .await;
 
     let voter = addin

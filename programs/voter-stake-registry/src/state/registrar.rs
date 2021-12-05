@@ -26,7 +26,13 @@ pub struct Registrar {
 }
 
 impl Registrar {
-    pub fn new_rate(&self, mint: Pubkey, mint_decimals: u8, rate: u64) -> Result<VotingMintConfig> {
+    pub fn new_voting_mint_config(
+        &self,
+        mint: Pubkey,
+        mint_decimals: u8,
+        rate: u64,
+        grant_authority: Option<Pubkey>,
+    ) -> Result<VotingMintConfig> {
         require!(self.vote_weight_decimals >= mint_decimals, InvalidDecimals);
         let decimal_diff = self
             .vote_weight_decimals
@@ -37,6 +43,7 @@ impl Registrar {
             rate,
             mint_decimals,
             conversion_factor: rate.checked_mul(10u64.pow(decimal_diff.into())).unwrap(),
+            grant_authority: grant_authority.unwrap_or(Pubkey::new_from_array([0; 32])),
         })
     }
 

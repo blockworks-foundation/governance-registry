@@ -35,7 +35,15 @@ async fn test_basic() -> Result<(), TransportError> {
         .await;
     let mngo_voting_mint = context
         .addin
-        .configure_voting_mint(&registrar, &realm_authority, payer, 0, &context.mints[0], 1)
+        .configure_voting_mint(
+            &registrar,
+            &realm_authority,
+            payer,
+            0,
+            &context.mints[0],
+            1,
+            None,
+        )
         .await;
 
     let voter = context

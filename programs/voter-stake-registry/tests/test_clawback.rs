@@ -50,6 +50,7 @@ async fn test_clawback() -> Result<(), TransportError> {
             0,
             community_token_mint,
             1,
+            None,
         )
         .await;
 

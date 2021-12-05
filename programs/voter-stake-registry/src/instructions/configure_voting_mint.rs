@@ -48,6 +48,7 @@ pub fn configure_voting_mint(
     idx: u16,
     rate: u64,
     decimals: u8,
+    grant_authority: Option<Pubkey>,
 ) -> Result<()> {
     msg!("--------configure_voting_mint--------");
     require!(rate > 0, InvalidRate);
@@ -60,7 +61,11 @@ pub fn configure_voting_mint(
         registrar.voting_mints[idx as usize].rate == 0,
         VotingMintConfigIndexAlreadyInUse
     );
-    registrar.voting_mints[idx as usize] =
-        registrar.new_rate(ctx.accounts.mint.key(), decimals, rate)?;
+    registrar.voting_mints[idx as usize] = registrar.new_voting_mint_config(
+        ctx.accounts.mint.key(),
+        decimals,
+        rate,
+        grant_authority,
+    )?;
     Ok(())
 }

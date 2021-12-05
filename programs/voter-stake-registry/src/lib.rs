@@ -71,8 +71,9 @@ pub mod voter_stake_registry {
         idx: u16,
         rate: u64,
         decimals: u8,
+        grant_authority: Option<Pubkey>,
     ) -> Result<()> {
-        instructions::configure_voting_mint(ctx, idx, rate, decimals)
+        instructions::configure_voting_mint(ctx, idx, rate, decimals, grant_authority)
     }
 
     pub fn create_voter(
@@ -99,6 +100,26 @@ pub mod voter_stake_registry {
 
     pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) -> Result<()> {
         instructions::withdraw(ctx, deposit_entry_index, amount)
+    }
+
+    pub fn grant(
+        ctx: Context<Grant>,
+        voter_bump: u8,
+        voter_weight_record_bump: u8,
+        kind: LockupKind,
+        periods: u32,
+        allow_clawback: bool,
+        amount: u64,
+    ) -> Result<()> {
+        instructions::grant(
+            ctx,
+            voter_bump,
+            voter_weight_record_bump,
+            kind,
+            periods,
+            allow_clawback,
+            amount,
+        )
     }
 
     pub fn clawback(ctx: Context<Clawback>, deposit_entry_index: u8) -> Result<()> {
