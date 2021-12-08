@@ -36,10 +36,10 @@ pub struct ConfigureVotingMint<'info> {
 /// deposit the mint in exchange for vote weight. There can only be a single
 /// exchange rate per mint.
 ///
-/// `idx`: index of the rate to be set
-/// `digit_shift`: how many digits to shift the native token amount, see below
-/// `deposit_scaled_factor`: vote weight factor for deposits, in 1/1e9 units
-/// `lockup_scaled_factor`: max extra weight for lockups, in 1/1e9 units
+/// * `idx`: index of the rate to be set
+/// * `digit_shift`: how many digits to shift the native token amount, see below
+/// * `deposit_scaled_factor`: vote weight factor for deposits, in 1/1e9 units
+/// * `lockup_scaled_factor`: max extra weight for lockups, in 1/1e9 units
 ///
 /// The vote weight for `amount` of native tokens will be
 /// ```
@@ -57,15 +57,17 @@ pub struct ConfigureVotingMint<'info> {
 ///
 /// Example: If you have token A with 6 decimals and token B with 9 decimals, you
 /// could set up:
-///    A with digit_shift=0,  deposit_scaled_factor=2e9, lockup_scaled_factor=0
-///    B with digit_shift=-3, deposit_scaled_factor=1e9, lockup_scaled_factor=1e9
+///    * A with digit_shift=0,  deposit_scaled_factor=2e9, lockup_scaled_factor=0
+///    * B with digit_shift=-3, deposit_scaled_factor=1e9, lockup_scaled_factor=1e9
+///
 /// That would make 1.0 decimaled tokens of A as valuable as 2.0 decimaled tokens
 /// of B. B tokens could be locked up to double their vote weight. As long as
 /// A's and B's supplies are below 2^63, there could be no overflow.
 /// Note that in this example, you need 1000 native B tokens before receiving 1
 /// unit of vote weight. If the supplies were significantly lower, you could use
-///    A with digit_shift=3, deposit_scaled_factor=2e9, lockup_scaled_factor=0
-///    B with digit_shift=0, deposit_scaled_factor=1e9, lockup_scaled_factor=1e9
+///    * A with digit_shift=3, deposit_scaled_factor=2e9, lockup_scaled_factor=0
+///    * B with digit_shift=0, deposit_scaled_factor=1e9, lockup_scaled_factor=1e9
+///
 /// to not lose precision on B tokens.
 ///
 pub fn configure_voting_mint(
