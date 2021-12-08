@@ -68,6 +68,7 @@ pub mod voter_stake_registry {
         digit_shift: i8,
         deposit_scaled_factor: u64,
         lockup_scaled_factor: u64,
+        lockup_saturation_secs: u64,
         grant_authority: Option<Pubkey>,
     ) -> Result<()> {
         instructions::configure_voting_mint(
@@ -76,6 +77,7 @@ pub mod voter_stake_registry {
             digit_shift,
             deposit_scaled_factor,
             lockup_scaled_factor,
+            lockup_saturation_secs,
             grant_authority,
         )
     }

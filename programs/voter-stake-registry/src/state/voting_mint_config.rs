@@ -24,6 +24,9 @@ pub struct VotingMintConfig {
     /// Maximum vote weight factor for lockups, in 1/SCALED_FACTOR_BASE units.
     pub lockup_scaled_factor: u64,
 
+    /// Number of seconds of lockup needed to reach the maximum lockup bonus.
+    pub lockup_saturation_secs: u64,
+
     /// The authority that is allowed to push grants into voters
     pub grant_authority: Pubkey,
 }

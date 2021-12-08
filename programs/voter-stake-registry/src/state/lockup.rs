@@ -20,14 +20,6 @@ pub const SECS_PER_MONTH: i64 = 10;
 #[cfg(not(feature = "localnet"))]
 pub const SECS_PER_MONTH: i64 = 365 * SECS_PER_DAY / 12;
 
-/// Maximum number of days one can lock for.
-/// TODO: Must match up with MAX_SECS_LOCKED etc
-pub const MAX_DAYS_LOCKED: u64 = 7 * 365;
-
-/// Maximum number of months one can lock for.
-/// TODO: Must match up with MAX_SECS_LOCKED etc
-pub const MAX_MONTHS_LOCKED: u64 = 7 * 12;
-
 #[zero_copy]
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct Lockup {
@@ -61,7 +53,6 @@ impl Default for Lockup {
 impl Lockup {
     /// Create lockup for a given period
     pub fn new_from_periods(kind: LockupKind, start_ts: i64, periods: u32) -> Result<Self> {
-        require!(periods as u64 <= kind.max_periods(), InvalidDays);
         Ok(Self {
             kind,
             start_ts,
@@ -130,6 +121,10 @@ pub enum LockupKind {
 }
 
 impl LockupKind {
+    /// The lockup length is specified by passing the number of lockup periods
+    /// to create_deposit_entry. This describes a period's length.
+    ///
+    /// For vesting lockups, the period length is also the vesting period.
     pub fn period_secs(&self) -> i64 {
         match self {
             LockupKind::None => 0,
@@ -138,21 +133,16 @@ impl LockupKind {
             LockupKind::Cliff => SECS_PER_DAY, // arbitrary choice
         }
     }
-
-    pub fn max_periods(&self) -> u64 {
-        match self {
-            LockupKind::None => 0,
-            LockupKind::Daily => MAX_DAYS_LOCKED,
-            LockupKind::Monthly => MAX_MONTHS_LOCKED,
-            LockupKind::Cliff => MAX_DAYS_LOCKED,
-        }
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::state::deposit_entry::DepositEntry;
+
+    // intentionally not a multiple of a day
+    const MAX_SECS_LOCKED: u64 = 365 * 24 * 60 * 60 + 7 * 60 * 60;
+    const MAX_DAYS_LOCKED: f64 = MAX_SECS_LOCKED as f64 / (24.0 * 60.0 * 60.0);
 
     #[test]
     pub fn days_left_start() -> Result<()> {
@@ -297,7 +287,7 @@ mod tests {
     pub fn voting_power_cliff_start() -> Result<()> {
         // 10 tokens with 6 decimals.
         let amount_deposited = 10 * 1_000_000;
-        let expected_voting_power = (10 * amount_deposited) / MAX_DAYS_LOCKED;
+        let expected_voting_power = locked_cliff_power(amount_deposited, 10.0);
         run_test_voting_power(TestVotingPower {
             expected_voting_power,
             amount_deposited,
@@ -353,7 +343,7 @@ mod tests {
     pub fn voting_power_cliff_one_day() -> Result<()> {
         // 10 tokens with 6 decimals.
         let amount_deposited = 10 * 1_000_000;
-        let expected_voting_power = (9 * amount_deposited) / MAX_DAYS_LOCKED;
+        let expected_voting_power = locked_cliff_power(amount_deposited, 9.0);
         run_test_voting_power(TestVotingPower {
             expected_voting_power,
             amount_deposited,
@@ -382,7 +372,7 @@ mod tests {
         // 10 tokens with 6 decimals.
         let amount_deposited = 10 * 1_000_000;
         // (8/2555) * deposit w/ 6 decimals.
-        let expected_voting_power = (8 * amount_deposited) / MAX_DAYS_LOCKED;
+        let expected_voting_power = locked_cliff_power(amount_deposited, 8.0);
         run_test_voting_power(TestVotingPower {
             expected_voting_power,
             amount_deposited,
@@ -591,6 +581,48 @@ mod tests {
         })
     }
 
+    #[test]
+    pub fn voting_power_daily_saturation() -> Result<()> {
+        let days = MAX_DAYS_LOCKED.floor() as u64;
+        let amount_deposited = days * 1_000_000;
+        let expected_voting_power = locked_daily_power(amount_deposited, 0.0, days);
+        run_test_voting_power(TestVotingPower {
+            expected_voting_power,
+            amount_deposited,
+            days_total: MAX_DAYS_LOCKED.floor(),
+            curr_day: 0.0,
+            kind: LockupKind::Daily,
+        })
+    }
+
+    #[test]
+    pub fn voting_power_daily_above_saturation1() -> Result<()> {
+        let days = (MAX_DAYS_LOCKED + 10.0).floor() as u64;
+        let amount_deposited = days * 1_000_000;
+        let expected_voting_power = locked_daily_power(amount_deposited, 0.0, days);
+        run_test_voting_power(TestVotingPower {
+            expected_voting_power,
+            amount_deposited,
+            days_total: (MAX_DAYS_LOCKED + 10.0).floor(),
+            curr_day: 0.0,
+            kind: LockupKind::Daily,
+        })
+    }
+
+    #[test]
+    pub fn voting_power_daily_above_saturation2() -> Result<()> {
+        let days = (MAX_DAYS_LOCKED + 10.0).floor() as u64;
+        let amount_deposited = days * 1_000_000;
+        let expected_voting_power = locked_daily_power(amount_deposited, 0.5, days);
+        run_test_voting_power(TestVotingPower {
+            expected_voting_power,
+            amount_deposited,
+            days_total: (MAX_DAYS_LOCKED + 10.0).floor(),
+            curr_day: 0.5,
+            kind: LockupKind::Daily,
+        })
+    }
+
     struct TestDaysLeft {
         expected_days_left: u64,
         days_total: f64,
@@ -658,7 +690,7 @@ mod tests {
             },
         };
         let curr_ts = start_ts + days_to_secs(t.curr_day);
-        let power = d.voting_power_locked(curr_ts, t.amount_deposited)?;
+        let power = d.voting_power_locked(curr_ts, t.amount_deposited, MAX_SECS_LOCKED)?;
         assert_eq!(power, t.expected_voting_power);
         Ok(())
     }
@@ -691,11 +723,18 @@ mod tests {
             let remaining_days = total_days as f64 - day - k as f64;
             total += locked_cliff_power_float(amount / total_days, remaining_days);
         }
-        total.floor() as u64
+        // the test code uses floats to compute the voting power; avoid
+        // getting incurrect expected results due to floating point rounding
+        (total + 0.0001).floor() as u64
     }
 
     fn locked_cliff_power_float(amount: u64, remaining_days: f64) -> f64 {
-        (amount as f64) * remaining_days / (MAX_DAYS_LOCKED as f64)
+        let relevant_days = if remaining_days < MAX_DAYS_LOCKED as f64 {
+            remaining_days
+        } else {
+            MAX_DAYS_LOCKED as f64
+        };
+        (amount as f64) * relevant_days / (MAX_DAYS_LOCKED as f64)
     }
 
     fn locked_cliff_power(amount: u64, remaining_days: f64) -> u64 {

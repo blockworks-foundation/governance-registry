@@ -76,7 +76,8 @@ async fn test_deposit_cliff() -> Result<(), TransportError> {
             &context.mints[0],
             0,
             1.0,
-            0.0,
+            1.0,
+            2 * 24 * 60 * 60,
             None,
         )
         .await;
@@ -142,14 +143,28 @@ async fn test_deposit_cliff() -> Result<(), TransportError> {
 
     let after_deposit = get_balances(0).await;
     assert_eq!(initial.token, after_deposit.token + after_deposit.vault);
-    assert_eq!(after_deposit.voter_weight, after_deposit.vault);
+    assert_eq!(after_deposit.voter_weight, 2 * after_deposit.vault); // saturated locking bonus
     assert_eq!(after_deposit.vault, 9000);
     assert_eq!(after_deposit.deposit, 9000);
 
     // cannot withdraw yet, nothing is vested
     withdraw(1).await.expect_err("nothing vested yet");
 
-    // advance almost three days
+    // advance a day
+    addin
+        .set_time_offset(&registrar, &realm_authority, 24 * 60 * 60)
+        .await;
+    let after_day1 = get_balances(0).await;
+    assert_eq!(after_day1.voter_weight, 2 * after_day1.vault); // still saturated
+
+    // advance a second day
+    addin
+        .set_time_offset(&registrar, &realm_authority, 48 * 60 * 60)
+        .await;
+    let after_day2 = get_balances(0).await;
+    assert_eq!(after_day2.voter_weight, 3 * after_day2.vault / 2); // locking half done
+
+    // advance to almost three days
     addin
         .set_time_offset(&registrar, &realm_authority, 71 * 60 * 60)
         .await;

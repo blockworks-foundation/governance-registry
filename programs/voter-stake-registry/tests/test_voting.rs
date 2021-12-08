@@ -48,6 +48,7 @@ async fn test_voting() -> Result<(), TransportError> {
             0,
             2.0,
             0.0,
+            5 * 365 * 24 * 60 * 60,
             None,
         )
         .await;

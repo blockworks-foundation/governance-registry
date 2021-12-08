@@ -103,6 +103,7 @@ impl AddinCookie {
         digit_shift: i8,
         deposit_scaled_factor: f64,
         lockup_scaled_factor: f64,
+        lockup_saturation_secs: u64,
         grant_authority: Option<Pubkey>,
     ) -> VotingMintConfigCookie {
         let deposit_mint = mint.pubkey.unwrap();
@@ -117,6 +118,7 @@ impl AddinCookie {
                 digit_shift,
                 deposit_scaled_factor: (deposit_scaled_factor * 1e9) as u64,
                 lockup_scaled_factor: (lockup_scaled_factor * 1e9) as u64,
+                lockup_saturation_secs,
                 grant_authority,
             },
         );

@@ -40,6 +40,8 @@ pub struct ConfigureVotingMint<'info> {
 /// * `digit_shift`: how many digits to shift the native token amount, see below
 /// * `deposit_scaled_factor`: vote weight factor for deposits, in 1/1e9 units
 /// * `lockup_scaled_factor`: max extra weight for lockups, in 1/1e9 units
+/// * `lockup_saturation_secs`: lockup duration at which the full vote weight
+///   bonus is given to locked up deposits
 ///
 /// The vote weight for `amount` of native tokens will be
 /// ```
@@ -49,7 +51,8 @@ pub struct ConfigureVotingMint<'info> {
 ///               + lockup_duration_factor * lockup_scaled_factor/1e9)
 /// ```
 /// where lockup_duration_factor is a value between 0 and 1, depending on how long
-/// the amount is locked up.
+/// the amount is locked up. It is 1 when the lockup duration is greater or equal
+/// lockup_saturation_secs.
 ///
 /// Warning: Choose values that ensure that the vote weight will not overflow the
 /// u64 limit! There is a check based on the supply of all configured mints, but
@@ -84,6 +87,7 @@ pub fn configure_voting_mint(
     digit_shift: i8,
     deposit_scaled_factor: u64,
     lockup_scaled_factor: u64,
+    lockup_saturation_secs: u64,
     grant_authority: Option<Pubkey>,
 ) -> Result<()> {
     require!(
@@ -104,6 +108,7 @@ pub fn configure_voting_mint(
         digit_shift,
         deposit_scaled_factor,
         lockup_scaled_factor,
+        lockup_saturation_secs,
         grant_authority: grant_authority.unwrap_or(Pubkey::new_from_array([0; 32])),
     };
 

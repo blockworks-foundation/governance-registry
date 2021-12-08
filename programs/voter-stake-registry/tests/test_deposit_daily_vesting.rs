@@ -77,7 +77,8 @@ async fn test_deposit_daily_vesting() -> Result<(), TransportError> {
             &context.mints[0],
             0,
             1.0,
-            0.0,
+            0.5,
+            60 * 60 * 60, // 60h / 2.5d
             None,
         )
         .await;
@@ -143,12 +144,26 @@ async fn test_deposit_daily_vesting() -> Result<(), TransportError> {
 
     let after_deposit = get_balances(0).await;
     assert_eq!(initial.token, after_deposit.token + after_deposit.vault);
-    assert_eq!(after_deposit.voter_weight, after_deposit.vault);
+    // The vesting parts are locked for 72, 48 and 24h. Lockup saturates at 60h.
+    assert_eq!(
+        after_deposit.voter_weight,
+        ((after_deposit.vault as f64) * (1.0 + 0.5 * (60.0 + 48.0 + 24.0) / 60.0 / 3.0)) as u64
+    );
     assert_eq!(after_deposit.vault, 9000);
     assert_eq!(after_deposit.deposit, 9000);
 
     // cannot withdraw yet, nothing is vested
     withdraw(1).await.expect_err("nothing vested yet");
+
+    // check vote weight reduction after an hour
+    addin
+        .set_time_offset(&registrar, &realm_authority, 60 * 60)
+        .await;
+    let after_hour = get_balances(0).await;
+    assert_eq!(
+        after_hour.voter_weight,
+        ((after_hour.vault as f64) * (1.0 + 0.5 * (60.0 + 47.0 + 23.0) / 60.0 / 3.0)) as u64
+    );
 
     // advance a day
     addin
@@ -161,7 +176,10 @@ async fn test_deposit_daily_vesting() -> Result<(), TransportError> {
 
     let after_withdraw = get_balances(0).await;
     assert_eq!(initial.token, after_withdraw.token + after_withdraw.vault);
-    assert_eq!(after_withdraw.voter_weight, after_withdraw.vault);
+    assert_eq!(
+        after_withdraw.voter_weight,
+        ((after_withdraw.vault as f64) * (1.0 + 0.5 * (47.0 + 23.0) / 60.0 / 2.0)) as u64
+    );
     assert_eq!(after_withdraw.vault, 6000);
     assert_eq!(after_withdraw.deposit, 6000);
 
@@ -171,7 +189,10 @@ async fn test_deposit_daily_vesting() -> Result<(), TransportError> {
 
     let after_deposit = get_balances(0).await;
     assert_eq!(initial.token, after_deposit.token + after_deposit.vault);
-    assert_eq!(after_deposit.voter_weight, after_deposit.vault);
+    assert_eq!(
+        after_deposit.voter_weight,
+        ((after_deposit.vault as f64) * (1.0 + 0.5 * (47.0 + 23.0) / 60.0 / 2.0)) as u64
+    );
     assert_eq!(after_deposit.vault, 11000);
     assert_eq!(after_deposit.deposit, 11000);
 
@@ -195,7 +216,10 @@ async fn test_deposit_daily_vesting() -> Result<(), TransportError> {
 
     let after_withdraw = get_balances(0).await;
     assert_eq!(initial.token, after_withdraw.token + after_withdraw.vault);
-    assert_eq!(after_withdraw.voter_weight, after_withdraw.vault);
+    assert_eq!(
+        after_withdraw.voter_weight,
+        ((after_withdraw.vault as f64) * (1.0 + 0.5 * 23.0 / 60.0)) as u64
+    );
     assert_eq!(after_withdraw.vault, 6500);
     assert_eq!(after_withdraw.deposit, 6500);
 
