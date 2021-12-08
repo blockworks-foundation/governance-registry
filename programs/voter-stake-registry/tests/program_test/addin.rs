@@ -52,12 +52,8 @@ impl AddinCookie {
             &self.program_id,
         );
 
-        let vote_weight_decimals = 6;
         let data = anchor_lang::InstructionData::data(
-            &voter_stake_registry::instruction::CreateRegistrar {
-                vote_weight_decimals,
-                registrar_bump,
-            },
+            &voter_stake_registry::instruction::CreateRegistrar { registrar_bump },
         );
 
         let accounts = anchor_lang::ToAccountMetas::to_account_metas(
@@ -104,7 +100,9 @@ impl AddinCookie {
         payer: &Keypair,
         index: u16,
         mint: &MintCookie,
-        rate: u64,
+        digit_shift: i8,
+        deposit_scaled_factor: f64,
+        lockup_scaled_factor: f64,
         grant_authority: Option<Pubkey>,
     ) -> VotingMintConfigCookie {
         let deposit_mint = mint.pubkey.unwrap();
@@ -116,13 +114,14 @@ impl AddinCookie {
         let data = anchor_lang::InstructionData::data(
             &voter_stake_registry::instruction::ConfigureVotingMint {
                 idx: index,
-                rate,
-                decimals: mint.decimals,
+                digit_shift,
+                deposit_scaled_factor: (deposit_scaled_factor * 1e9) as u64,
+                lockup_scaled_factor: (lockup_scaled_factor * 1e9) as u64,
                 grant_authority,
             },
         );
 
-        let accounts = anchor_lang::ToAccountMetas::to_account_metas(
+        let mut accounts = anchor_lang::ToAccountMetas::to_account_metas(
             &voter_stake_registry::accounts::ConfigureVotingMint {
                 vault,
                 mint: deposit_mint,
@@ -136,6 +135,10 @@ impl AddinCookie {
             },
             None,
         );
+        accounts.push(anchor_lang::prelude::AccountMeta::new_readonly(
+            deposit_mint,
+            false,
+        ));
 
         let instructions = vec![Instruction {
             program_id: self.program_id,

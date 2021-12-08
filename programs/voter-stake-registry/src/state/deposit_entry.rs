@@ -4,11 +4,6 @@ use crate::state::voting_mint_config::VotingMintConfig;
 use anchor_lang::prelude::*;
 use std::convert::TryFrom;
 
-/// Vote weight is amount * FIXED_VOTE_WEIGHT_FACTOR +
-/// LOCKING_VOTE_WEIGHT_FACTOR * amount * time / max time
-pub const FIXED_VOTE_WEIGHT_FACTOR: u64 = 1;
-pub const LOCKING_VOTE_WEIGHT_FACTOR: u64 = 0;
-
 pub const MAX_SECS_LOCKED: u64 = 7 * 365 * 24 * 60 * 60;
 
 /// Bookkeeping for a single deposit for a given mint and lockup schedule.
@@ -53,13 +48,14 @@ impl DepositEntry {
     /// For each cliff-locked token, the vote weight is:
     ///
     /// ```
-    ///    voting_power = amount * (fixed_factor + locking_factor * time_factor)
+    ///    voting_power = deposit_vote_weight
+    ///                   + lockup_duration_factor * max_lockup_vote_weight
     /// ```
     ///
     /// with
-    ///    fixed_factor = FIXED_VOTE_WEIGHT_FACTOR
-    ///    locking_factor = LOCKING_VOTE_WEIGHT_FACTOR
-    ///    time_factor = lockup_time_remaining / max_lockup_time
+    ///    deposit_vote_weight and max_lockup_vote_weight from the
+    ///        VotingMintConfig
+    ///    lockup_duration_factor = lockup_time_remaining / max_lockup_time
     ///
     /// Linear vesting schedules can be thought of as a sequence of cliff-
     /// locked tokens and have the matching voting weight.
@@ -90,45 +86,41 @@ impl DepositEntry {
     /// voting_power_linear_vesting() below.
     ///
     pub fn voting_power(&self, voting_mint_config: &VotingMintConfig, curr_ts: i64) -> Result<u64> {
-        let fixed_contribution = voting_mint_config
-            .convert(self.amount_deposited_native)
-            .checked_mul(FIXED_VOTE_WEIGHT_FACTOR)
-            .unwrap();
-        if LOCKING_VOTE_WEIGHT_FACTOR == 0 {
-            return Ok(fixed_contribution);
-        }
+        let deposit_vote_weight =
+            voting_mint_config.deposit_vote_weight(self.amount_deposited_native)?;
 
-        let max_locked_contribution =
-            voting_mint_config.convert(self.amount_initially_locked_native);
-        Ok(fixed_contribution
-            + self
-                .voting_power_locked(curr_ts, max_locked_contribution)?
-                .checked_mul(LOCKING_VOTE_WEIGHT_FACTOR)
-                .unwrap())
+        let max_locked_vote_weight =
+            voting_mint_config.max_lockup_vote_weight(self.amount_initially_locked_native)?;
+        if max_locked_vote_weight == 0 {
+            return Ok(deposit_vote_weight);
+        }
+        Ok(deposit_vote_weight
+            .checked_add(self.voting_power_locked(curr_ts, max_locked_vote_weight)?)
+            .ok_or(Error::ErrorCode(ErrorCode::VoterWeightOverflow))?)
     }
 
     /// Vote power contribution from locked funds only.
     /// Not scaled by LOCKING_VOTE_WEIGHT_FACTOR yet.
-    pub fn voting_power_locked(&self, curr_ts: i64, max_locked_contribution: u64) -> Result<u64> {
+    pub fn voting_power_locked(&self, curr_ts: i64, max_locked_vote_weight: u64) -> Result<u64> {
         if curr_ts >= self.lockup.end_ts {
             return Ok(0);
         }
         match self.lockup.kind {
             LockupKind::None => Ok(0),
-            LockupKind::Daily => self.voting_power_linear_vesting(curr_ts, max_locked_contribution),
+            LockupKind::Daily => self.voting_power_linear_vesting(curr_ts, max_locked_vote_weight),
             LockupKind::Monthly => {
-                self.voting_power_linear_vesting(curr_ts, max_locked_contribution)
+                self.voting_power_linear_vesting(curr_ts, max_locked_vote_weight)
             }
-            LockupKind::Cliff => self.voting_power_cliff(curr_ts, max_locked_contribution),
+            LockupKind::Cliff => self.voting_power_cliff(curr_ts, max_locked_vote_weight),
         }
     }
 
     /// Vote power contribution from funds with linear vesting.
     /// Not scaled by LOCKING_VOTE_WEIGHT_FACTOR yet.
-    fn voting_power_cliff(&self, curr_ts: i64, max_locked_contribution: u64) -> Result<u64> {
+    fn voting_power_cliff(&self, curr_ts: i64, max_locked_vote_weight: u64) -> Result<u64> {
         let remaining = self.lockup.seconds_left(curr_ts);
         Ok(u64::try_from(
-            (max_locked_contribution as u128)
+            (max_locked_vote_weight as u128)
                 .checked_mul(remaining as u128)
                 .unwrap()
                 .checked_div(MAX_SECS_LOCKED as u128)
@@ -142,7 +134,7 @@ impl DepositEntry {
     fn voting_power_linear_vesting(
         &self,
         curr_ts: i64,
-        max_locked_contribution: u64,
+        max_locked_vote_weight: u64,
     ) -> Result<u64> {
         let periods_left = self.lockup.periods_left(curr_ts)?;
         let periods_total = self.lockup.periods_total()?;
@@ -157,15 +149,15 @@ impl DepositEntry {
         //
         // For example, if there were 5 vesting periods, with 3 of them left
         // (i.e. two have already vested and their tokens are no longer locked)
-        // we'd have (max_contribution / 5) weight in each of them, and the
-        // voting weight would be:
-        //    (max_locked_contribution/5) * secs_left_for_cliff_1 / MAX_SECS_LOCKED
-        //  + (max_locked_contribution/5) * secs_left_for_cliff_2 / MAX_SECS_LOCKED
-        //  + (max_locked_contribution/5) * secs_left_for_cliff_3 / MAX_SECS_LOCKED
+        // we'd have (max_locked_vote_weight / 5) weight in each of them, and the
+        // voting power would be:
+        //    (max_locked_vote_weight/5) * secs_left_for_cliff_1 / MAX_SECS_LOCKED
+        //  + (max_locked_vote_weight/5) * secs_left_for_cliff_2 / MAX_SECS_LOCKED
+        //  + (max_locked_vote_weight/5) * secs_left_for_cliff_3 / MAX_SECS_LOCKED
         //
         // Or more simply:
-        //    max_locked_contribution * (\sum_p secs_left_for_cliff_p) / (5 * MAX_SECS_LOCKED)
-        //  = max_locked_contribution * lockup_secs                    / denominator
+        //    max_locked_vote_weight * (\sum_p secs_left_for_cliff_p) / (5 * MAX_SECS_LOCKED)
+        //  = max_locked_vote_weight * lockup_secs                    / denominator
         //
         // The value secs_left_for_cliff_p splits up as
         //    secs_left_for_cliff_p = secs_to_closest_cliff + (p-1) * period_secs
@@ -203,7 +195,7 @@ impl DepositEntry {
         let lockup_secs = periods_left * secs_to_closest_cliff + sum_full_periods * period_secs;
 
         Ok(u64::try_from(
-            (max_locked_contribution as u128)
+            (max_locked_vote_weight as u128)
                 .checked_mul(lockup_secs as u128)
                 .unwrap()
                 .checked_div(denominator as u128)

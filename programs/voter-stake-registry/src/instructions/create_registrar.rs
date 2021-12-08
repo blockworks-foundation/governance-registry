@@ -6,7 +6,7 @@ use spl_governance::state::realm;
 use std::mem::size_of;
 
 #[derive(Accounts)]
-#[instruction(vote_weight_decimals: u8, registrar_bump: u8)]
+#[instruction(registrar_bump: u8)]
 pub struct CreateRegistrar<'info> {
     /// The voting registrar. There can only be a single registrar
     /// per governance realm and governing mint.
@@ -51,11 +51,7 @@ pub struct CreateRegistrar<'info> {
 ///
 /// To use the registrar, call ConfigVotingMint to register token mints that may be
 /// used for voting.
-pub fn create_registrar(
-    ctx: Context<CreateRegistrar>,
-    vote_weight_decimals: u8,
-    registrar_bump: u8,
-) -> Result<()> {
+pub fn create_registrar(ctx: Context<CreateRegistrar>, registrar_bump: u8) -> Result<()> {
     let registrar = &mut ctx.accounts.registrar;
     registrar.bump = registrar_bump;
     registrar.governance_program_id = ctx.accounts.governance_program_id.key();
@@ -63,7 +59,6 @@ pub fn create_registrar(
     registrar.realm_governing_token_mint = ctx.accounts.realm_governing_token_mint.key();
     registrar.realm_authority = ctx.accounts.realm_authority.key();
     registrar.clawback_authority = ctx.accounts.clawback_authority.key();
-    registrar.vote_weight_decimals = vote_weight_decimals;
     registrar.time_offset = 0;
 
     // Verify that "realm_authority" is the expected authority on "realm"

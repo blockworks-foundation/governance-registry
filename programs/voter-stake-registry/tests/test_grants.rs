@@ -45,7 +45,9 @@ async fn test_grants() -> Result<(), TransportError> {
             payer,
             0,
             &context.mints[0],
-            2,
+            0,
+            2.0,
+            0.0,
             Some(grant_authority.pubkey()),
         )
         .await;

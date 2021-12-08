@@ -58,22 +58,26 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod voter_stake_registry {
     use super::*;
 
-    pub fn create_registrar(
-        ctx: Context<CreateRegistrar>,
-        vote_weight_decimals: u8,
-        registrar_bump: u8,
-    ) -> Result<()> {
-        instructions::create_registrar(ctx, vote_weight_decimals, registrar_bump)
+    pub fn create_registrar(ctx: Context<CreateRegistrar>, registrar_bump: u8) -> Result<()> {
+        instructions::create_registrar(ctx, registrar_bump)
     }
 
     pub fn configure_voting_mint(
         ctx: Context<ConfigureVotingMint>,
         idx: u16,
-        rate: u64,
-        decimals: u8,
+        digit_shift: i8,
+        deposit_scaled_factor: u64,
+        lockup_scaled_factor: u64,
         grant_authority: Option<Pubkey>,
     ) -> Result<()> {
-        instructions::configure_voting_mint(ctx, idx, rate, decimals, grant_authority)
+        instructions::configure_voting_mint(
+            ctx,
+            idx,
+            digit_shift,
+            deposit_scaled_factor,
+            lockup_scaled_factor,
+            grant_authority,
+        )
     }
 
     pub fn create_voter(

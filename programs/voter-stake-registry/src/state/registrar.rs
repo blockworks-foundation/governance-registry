@@ -1,6 +1,7 @@
 use crate::error::*;
 use crate::state::voting_mint_config::VotingMintConfig;
 use anchor_lang::prelude::*;
+use anchor_spl::token::Mint;
 
 /// Instance of a voting rights distributor.
 #[account]
@@ -15,38 +16,11 @@ pub struct Registrar {
     // The length should be adjusted for one's use case.
     pub voting_mints: [VotingMintConfig; 2],
 
-    /// The decimals to use when converting deposits into a common currency.
-    ///
-    /// This must be larger or equal to the max of decimals over all accepted
-    /// token mints.
-    pub vote_weight_decimals: u8,
-
     /// Debug only: time offset, to allow tests to move forward in time.
     pub time_offset: i64,
 }
 
 impl Registrar {
-    pub fn new_voting_mint_config(
-        &self,
-        mint: Pubkey,
-        mint_decimals: u8,
-        rate: u64,
-        grant_authority: Option<Pubkey>,
-    ) -> Result<VotingMintConfig> {
-        require!(self.vote_weight_decimals >= mint_decimals, InvalidDecimals);
-        let decimal_diff = self
-            .vote_weight_decimals
-            .checked_sub(mint_decimals)
-            .unwrap();
-        Ok(VotingMintConfig {
-            mint,
-            rate,
-            mint_decimals,
-            conversion_factor: rate.checked_mul(10u64.pow(decimal_diff.into())).unwrap(),
-            grant_authority: grant_authority.unwrap_or(Pubkey::new_from_array([0; 32])),
-        })
-    }
-
     pub fn clock_unix_timestamp(&self) -> i64 {
         Clock::get().unwrap().unix_timestamp + self.time_offset
     }
@@ -56,6 +30,28 @@ impl Registrar {
             .iter()
             .position(|r| r.mint == mint)
             .ok_or(Error::ErrorCode(ErrorCode::VotingMintNotFound))
+    }
+
+    pub fn max_vote_weight(&self, mint_accounts: &[AccountInfo]) -> Result<u64> {
+        self.voting_mints
+            .iter()
+            .try_fold(0u64, |mut sum, voting_mint_config| -> Result<u64> {
+                if !voting_mint_config.in_use() {
+                    return Ok(sum);
+                }
+                let mint_account = mint_accounts
+                    .iter()
+                    .find(|a| a.key() == voting_mint_config.mint)
+                    .ok_or(Error::ErrorCode(ErrorCode::VotingMintNotFound))?;
+                let mint = Account::<Mint>::try_from(mint_account)?;
+                sum = sum
+                    .checked_add(voting_mint_config.deposit_vote_weight(mint.supply)?)
+                    .ok_or(Error::ErrorCode(ErrorCode::VoterWeightOverflow))?;
+                sum = sum
+                    .checked_add(voting_mint_config.max_lockup_vote_weight(mint.supply)?)
+                    .ok_or(Error::ErrorCode(ErrorCode::VoterWeightOverflow))?;
+                Ok(sum)
+            })
     }
 }
 

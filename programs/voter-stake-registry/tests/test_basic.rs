@@ -41,7 +41,9 @@ async fn test_basic() -> Result<(), TransportError> {
             payer,
             0,
             &context.mints[0],
-            1,
+            0,
+            1.0,
+            0.0,
             None,
         )
         .await;

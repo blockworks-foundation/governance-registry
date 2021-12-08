@@ -45,7 +45,9 @@ async fn test_voting() -> Result<(), TransportError> {
             payer,
             0,
             &context.mints[0],
-            2,
+            0,
+            2.0,
+            0.0,
             None,
         )
         .await;

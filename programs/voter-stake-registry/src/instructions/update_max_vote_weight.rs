@@ -1,7 +1,6 @@
 use crate::error::*;
 use crate::state::*;
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
 
 // Remaining accounts should all the token mints that have registered
 // exchange rates.
@@ -21,24 +20,7 @@ pub struct UpdateMaxVoteWeight<'info> {
 /// defined by the registrar's `rate_decimal` field.
 pub fn update_max_vote_weight<'info>(ctx: Context<UpdateMaxVoteWeight>) -> Result<()> {
     let registrar = &ctx.accounts.registrar;
-    let _max_vote_weight = {
-        let total: Result<u64> = ctx
-            .remaining_accounts
-            .iter()
-            .map(|acc| Account::<Mint>::try_from(acc))
-            .collect::<std::result::Result<Vec<Account<Mint>>, ProgramError>>()?
-            .iter()
-            .try_fold(0u64, |sum, m| {
-                let mint_idx = registrar.voting_mint_config_index(m.key())?;
-                let mint_config = registrar.voting_mints[mint_idx];
-                let amount = mint_config.convert(m.supply);
-                let total = sum.checked_add(amount).unwrap();
-                Ok(total)
-            });
-        total?
-            .checked_mul(FIXED_VOTE_WEIGHT_FACTOR + LOCKING_VOTE_WEIGHT_FACTOR)
-            .unwrap()
-    };
+    let _max_vote_weight = registrar.max_vote_weight(ctx.remaining_accounts)?;
     // TODO: SPL governance has not yet implemented this feature.
     //       When it has, probably need to write the result into an account,
     //       similar to VoterWeightRecord.
