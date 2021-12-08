@@ -45,7 +45,7 @@ impl VotingMintConfig {
     }
 
     /// Apply a factor in SCALED_FACTOR_BASE units.
-    fn apply_factor(&self, base_vote_weight: u64, factor: u64) -> Result<u64> {
+    fn apply_factor(base_vote_weight: u64, factor: u64) -> Result<u64> {
         let compute = || -> Option<u64> {
             u64::try_from(
                 (base_vote_weight as u128)
@@ -59,7 +59,7 @@ impl VotingMintConfig {
 
     /// The vote weight a deposit of a number of native tokens should have.
     pub fn deposit_vote_weight(&self, amount_native: u64) -> Result<u64> {
-        self.apply_factor(
+        Self::apply_factor(
             self.base_vote_weight(amount_native)?,
             self.deposit_scaled_factor,
         )
@@ -68,7 +68,7 @@ impl VotingMintConfig {
     /// The maximum vote weight a number of locked up native tokens can have.
     /// Will be multiplied with a factor between 0 and 1 for the lockup duration.
     pub fn max_lockup_vote_weight(&self, amount_native: u64) -> Result<u64> {
-        self.apply_factor(
+        Self::apply_factor(
             self.base_vote_weight(amount_native)?,
             self.lockup_scaled_factor,
         )

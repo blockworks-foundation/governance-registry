@@ -55,19 +55,27 @@ pub struct ConfigureVotingMint<'info> {
 /// u64 limit! There is a check based on the supply of all configured mints, but
 /// do your own checking too.
 ///
+/// If you use a single mint, prefer digit_shift=0 and deposit_scaled_factor +
+/// lockup_scaled_factor <= 1e9. That way you won't have issues with overflow no
+/// matter the size of the mint's supply.
+///
+/// Digit shifting is particularly useful when using several voting token mints
+/// that have a different number of decimals. It can be used to align them to
+/// a common number of decimals.
+///
 /// Example: If you have token A with 6 decimals and token B with 9 decimals, you
 /// could set up:
 ///    * A with digit_shift=0,  deposit_scaled_factor=2e9, lockup_scaled_factor=0
 ///    * B with digit_shift=-3, deposit_scaled_factor=1e9, lockup_scaled_factor=1e9
 ///
 /// That would make 1.0 decimaled tokens of A as valuable as 2.0 decimaled tokens
-/// of B. B tokens could be locked up to double their vote weight. As long as
-/// A's and B's supplies are below 2^63, there could be no overflow.
+/// of B when unlocked. B tokens could be locked up to double their vote weight. As
+/// long as A's and B's supplies are below 2^63, there could be no overflow.
+///
 /// Note that in this example, you need 1000 native B tokens before receiving 1
 /// unit of vote weight. If the supplies were significantly lower, you could use
 ///    * A with digit_shift=3, deposit_scaled_factor=2e9, lockup_scaled_factor=0
 ///    * B with digit_shift=0, deposit_scaled_factor=1e9, lockup_scaled_factor=1e9
-///
 /// to not lose precision on B tokens.
 ///
 pub fn configure_voting_mint(
