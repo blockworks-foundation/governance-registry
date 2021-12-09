@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 pub struct ResetLockup<'info> {
     // checking the PDA address it just an extra precaution,
     // the other constraints must be exhaustive
-    pub registrar: Box<Account<'info, Registrar>>,
+    pub registrar: AccountLoader<'info, Registrar>,
     #[account(
         mut,
         seeds = [registrar.key().as_ref(), b"voter".as_ref(), voter_authority.key().as_ref()],
@@ -25,7 +25,7 @@ pub fn reset_lockup(
     deposit_entry_index: u8,
     periods: u32,
 ) -> Result<()> {
-    let registrar = &ctx.accounts.registrar;
+    let registrar = &ctx.accounts.registrar.load()?;
     let voter = &mut ctx.accounts.voter.load_mut()?;
     let d = voter.active_deposit_mut(deposit_entry_index)?;
 

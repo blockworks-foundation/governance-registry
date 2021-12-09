@@ -6,7 +6,7 @@ use std::convert::TryFrom;
 
 #[derive(Accounts)]
 pub struct Deposit<'info> {
-    pub registrar: Box<Account<'info, Registrar>>,
+    pub registrar: AccountLoader<'info, Registrar>,
 
     // checking the PDA address it just an extra precaution,
     // the other constraints must be exhaustive
@@ -59,7 +59,7 @@ pub fn deposit(ctx: Context<Deposit>, deposit_entry_index: u8, amount: u64) -> R
         return Ok(());
     }
 
-    let registrar = &ctx.accounts.registrar;
+    let registrar = &ctx.accounts.registrar.load()?;
     let voter = &mut ctx.accounts.voter.load_mut()?;
 
     let d_entry = voter.active_deposit_mut(deposit_entry_index)?;
@@ -101,13 +101,15 @@ pub fn deposit(ctx: Context<Deposit>, deposit_entry_index: u8, amount: u64) -> R
     d_entry.amount_deposited_native += amount;
     d_entry.amount_initially_locked_native += amount;
 
+    let start_ts = d_entry.lockup.start_ts;
+    let end_ts = d_entry.lockup.end_ts;
     msg!(
         "Deposited amount {} at deposit index {} with lockup kind {:?}, and start ts {}, end ts {}",
         amount,
         deposit_entry_index,
         d_entry.lockup.kind,
-        d_entry.lockup.start_ts,
-        d_entry.lockup.end_ts,
+        start_ts,
+        end_ts,
     );
 
     Ok(())

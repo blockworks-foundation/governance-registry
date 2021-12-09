@@ -9,7 +9,7 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 #[derive(Accounts)]
 pub struct ConfigureVotingMint<'info> {
     #[account(mut, has_one = realm_authority)]
-    pub registrar: Box<Account<'info, Registrar>>,
+    pub registrar: AccountLoader<'info, Registrar>,
     pub realm_authority: Signer<'info>,
 
     /// Token account that all funds for this mint will be stored in
@@ -91,7 +91,7 @@ pub fn configure_voting_mint(
     grant_authority: Option<Pubkey>,
 ) -> Result<()> {
     require!(lockup_saturation_secs > 0, LockupSaturationMustBePositive);
-    let registrar = &mut ctx.accounts.registrar;
+    let registrar = &mut ctx.accounts.registrar.load_mut()?;
     require!(
         (idx as usize) < registrar.voting_mints.len(),
         OutOfBoundsVotingMintConfigIndex
@@ -107,6 +107,7 @@ pub fn configure_voting_mint(
         lockup_scaled_factor,
         lockup_saturation_secs,
         grant_authority: grant_authority.unwrap_or(Pubkey::new_from_array([0; 32])),
+        padding: [0; 31],
     };
 
     // Check for overflow in vote weight

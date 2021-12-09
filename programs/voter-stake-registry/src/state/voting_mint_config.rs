@@ -10,13 +10,13 @@ const SCALED_FACTOR_BASE: u64 = 1_000_000_000;
 /// See documentation of configure_voting_mint for details on how
 /// native token amounts convert to vote weight.
 #[zero_copy]
-#[derive(AnchorSerialize, AnchorDeserialize, Default)]
+#[derive(Default)]
 pub struct VotingMintConfig {
     /// Mint for this entry.
     pub mint: Pubkey,
 
-    /// Number of digits to shift native amounts, applying a 10^digit_shift factor.
-    pub digit_shift: i8,
+    /// The authority that is allowed to push grants into voters
+    pub grant_authority: Pubkey,
 
     /// Vote weight factor for deposits, in 1/SCALED_FACTOR_BASE units.
     pub deposit_scaled_factor: u64,
@@ -27,9 +27,13 @@ pub struct VotingMintConfig {
     /// Number of seconds of lockup needed to reach the maximum lockup bonus.
     pub lockup_saturation_secs: u64,
 
-    /// The authority that is allowed to push grants into voters
-    pub grant_authority: Pubkey,
+    /// Number of digits to shift native amounts, applying a 10^digit_shift factor.
+    pub digit_shift: i8,
+
+    // Empty bytes for future upgrades.
+    pub padding: [u8; 31],
 }
+const_assert!(std::mem::size_of::<VotingMintConfig>() == 2 * 32 + 3 * 8 + 1 + 31);
 
 impl VotingMintConfig {
     /// Converts an amount in this voting mints's native currency

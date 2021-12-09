@@ -16,7 +16,7 @@ use std::mem::size_of;
     amount: u64,
 )]
 pub struct Grant<'info> {
-    pub registrar: Box<Account<'info, Registrar>>,
+    pub registrar: AccountLoader<'info, Registrar>,
 
     #[account(
         init_if_needed,
@@ -89,7 +89,7 @@ pub fn grant(
     amount: u64,
 ) -> Result<()> {
     // Load accounts.
-    let registrar = &ctx.accounts.registrar;
+    let registrar = &ctx.accounts.registrar.load()?;
     let voter_authority = ctx.accounts.voter_authority.key();
 
     // Get the exchange rate entry associated with this deposit.
@@ -145,13 +145,15 @@ pub fn grant(
     d_entry.amount_deposited_native = amount;
     d_entry.amount_initially_locked_native = amount;
 
+    let start_ts = d_entry.lockup.start_ts;
+    let end_ts = d_entry.lockup.end_ts;
     msg!(
         "Granted amount {} at deposit index {} with lockup kind {:?}, and start ts {}, end ts {}",
         amount,
         free_entry_idx,
         d_entry.lockup.kind,
-        d_entry.lockup.start_ts,
-        d_entry.lockup.end_ts,
+        start_ts,
+        end_ts,
     );
 
     Ok(())

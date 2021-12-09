@@ -3223,6 +3223,7 @@ dependencies = [
  "spl-associated-token-account",
  "spl-governance",
  "spl-token 3.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "static_assertions",
 ]
 
 [[package]]

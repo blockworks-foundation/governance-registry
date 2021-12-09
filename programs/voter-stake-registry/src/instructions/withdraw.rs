@@ -5,7 +5,7 @@ use anchor_spl::token::{self, Token, TokenAccount};
 
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
-    pub registrar: Box<Account<'info, Registrar>>,
+    pub registrar: AccountLoader<'info, Registrar>,
 
     // checking the PDA address it just an extra precaution,
     // the other constraints must be exhaustive
@@ -36,9 +36,9 @@ pub struct Withdraw<'info> {
         mut,
         seeds = [registrar.key().as_ref(), b"voter-weight-record".as_ref(), voter_authority.key().as_ref()],
         bump = voter.load()?.voter_weight_record_bump,
-        constraint = voter_weight_record.realm == registrar.realm,
+        constraint = voter_weight_record.realm == registrar.load()?.realm,
         constraint = voter_weight_record.governing_token_owner == voter.load()?.voter_authority,
-        constraint = voter_weight_record.governing_token_mint == registrar.realm_governing_token_mint,
+        constraint = voter_weight_record.governing_token_mint == registrar.load()?.realm_governing_token_mint,
     )]
     pub voter_weight_record: Account<'info, VoterWeightRecord>,
 
@@ -74,7 +74,7 @@ impl<'info> Withdraw<'info> {
 /// `amount` is in units of the native currency being withdrawn.
 pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) -> Result<()> {
     // Load the accounts.
-    let registrar = &ctx.accounts.registrar;
+    let registrar = &ctx.accounts.registrar.load()?;
     let voter = &mut ctx.accounts.voter.load_mut()?;
 
     // Governance may forbid withdraws, for example when engaged in a vote.
@@ -110,13 +110,15 @@ pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) ->
         amount,
     )?;
 
+    let start_ts = deposit_entry.lockup.start_ts;
+    let end_ts = deposit_entry.lockup.end_ts;
     msg!(
         "Withdrew amount {} at deposit index {} with lockup kind {:?}, and start ts {}, end ts {}",
         amount,
         deposit_entry_index,
         deposit_entry.lockup.kind,
-        deposit_entry.lockup.start_ts,
-        deposit_entry.lockup.end_ts,
+        start_ts,
+        end_ts,
     );
 
     // Update the voter weight record

@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 // exchange rates.
 #[derive(Accounts)]
 pub struct UpdateMaxVoteWeight<'info> {
-    pub registrar: Box<Account<'info, Registrar>>,
+    pub registrar: AccountLoader<'info, Registrar>,
     // TODO: SPL governance has not yet implemented this.
     pub max_vote_weight_record: UncheckedAccount<'info>,
 }
@@ -19,7 +19,7 @@ pub struct UpdateMaxVoteWeight<'info> {
 /// all tokens fits into a u64 *after* converting into common decimals, as
 /// defined by the registrar's `rate_decimal` field.
 pub fn update_max_vote_weight<'info>(ctx: Context<UpdateMaxVoteWeight>) -> Result<()> {
-    let registrar = &ctx.accounts.registrar;
+    let registrar = &ctx.accounts.registrar.load()?;
     let _max_vote_weight = registrar.max_vote_weight(ctx.remaining_accounts)?;
     // TODO: SPL governance has not yet implemented this feature.
     //       When it has, probably need to write the result into an account,

@@ -7,7 +7,7 @@ use anchor_spl::token::{Token, TokenAccount};
 #[derive(Accounts)]
 pub struct Clawback<'info> {
     #[account(has_one = clawback_authority)]
-    pub registrar: Box<Account<'info, Registrar>>,
+    pub registrar: AccountLoader<'info, Registrar>,
     pub clawback_authority: Signer<'info>,
 
     // checking the PDA address it just an extra precaution,
@@ -65,7 +65,7 @@ impl<'info> Clawback<'info> {
 /// that have already vested in place.
 pub fn clawback(ctx: Context<Clawback>, deposit_entry_index: u8) -> Result<()> {
     // Load the accounts.
-    let registrar = &ctx.accounts.registrar;
+    let registrar = &ctx.accounts.registrar.load()?;
     let voter = &mut ctx.accounts.voter.load_mut()?;
     let deposit_entry = voter.active_deposit_mut(deposit_entry_index)?;
     require!(

@@ -17,7 +17,7 @@ pub struct CreateRegistrar<'info> {
         payer = payer,
         space = 8 + size_of::<Registrar>()
     )]
-    pub registrar: Box<Account<'info, Registrar>>,
+    pub registrar: AccountLoader<'info, Registrar>,
 
     /// An spl-governance realm
     ///
@@ -52,7 +52,7 @@ pub struct CreateRegistrar<'info> {
 /// To use the registrar, call ConfigVotingMint to register token mints that may be
 /// used for voting.
 pub fn create_registrar(ctx: Context<CreateRegistrar>, registrar_bump: u8) -> Result<()> {
-    let registrar = &mut ctx.accounts.registrar;
+    let registrar = &mut ctx.accounts.registrar.load_init()?;
     registrar.bump = registrar_bump;
     registrar.governance_program_id = ctx.accounts.governance_program_id.key();
     registrar.realm = ctx.accounts.realm.key();

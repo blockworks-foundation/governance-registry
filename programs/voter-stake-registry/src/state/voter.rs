@@ -9,10 +9,12 @@ use spl_governance::state::token_owner_record;
 pub struct Voter {
     pub voter_authority: Pubkey,
     pub registrar: Pubkey,
+    pub deposits: [DepositEntry; 32],
     pub voter_bump: u8,
     pub voter_weight_record_bump: u8,
-    pub deposits: [DepositEntry; 32],
+    pub padding: [u8; 30],
 }
+const_assert!(std::mem::size_of::<Voter>() == 2 * 32 + 32 * 64 + 2 + 30);
 
 impl Voter {
     pub fn weight(&self, registrar: &Registrar) -> Result<u64> {

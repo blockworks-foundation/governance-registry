@@ -21,9 +21,7 @@ pub const SECS_PER_MONTH: i64 = 10;
 pub const SECS_PER_MONTH: i64 = 365 * SECS_PER_DAY / 12;
 
 #[zero_copy]
-#[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct Lockup {
-    pub kind: LockupKind,
     /// Start of the lockup.
     ///
     /// Note, that if start_ts is in the future, the funds are nevertheless
@@ -32,12 +30,17 @@ pub struct Lockup {
     /// Similarly vote power computations don't care about start_ts and always
     /// assume the full interval from now to end_ts.
     pub start_ts: i64,
-    // End of the lockup.
+
+    /// End of the lockup.
     pub end_ts: i64,
+
+    /// Type of lockup.
+    pub kind: LockupKind,
+
     // Empty bytes for future upgrades.
-    // TODO: what kinds of upgrades do we foresee?
-    pub padding: [u8; 16],
+    pub padding: [u8; 15],
 }
+const_assert!(std::mem::size_of::<Lockup>() == 2 * 8 + 1 + 15);
 
 impl Default for Lockup {
     fn default() -> Self {
@@ -45,7 +48,7 @@ impl Default for Lockup {
             kind: LockupKind::None,
             start_ts: 0,
             end_ts: 0,
-            padding: [0; 16],
+            padding: [0; 15],
         }
     }
 }
@@ -59,7 +62,7 @@ impl Lockup {
             end_ts: start_ts
                 .checked_add(i64::from(periods).checked_mul(kind.period_secs()).unwrap())
                 .unwrap(),
-            padding: [0; 16],
+            padding: [0; 15],
         })
     }
 
@@ -651,7 +654,7 @@ mod tests {
             kind: LockupKind::Cliff,
             start_ts,
             end_ts,
-            padding: [0u8; 16],
+            padding: [0u8; 15],
         };
         let days_left = l.periods_left(curr_ts)?;
         assert_eq!(days_left, t.expected_days_left);
@@ -666,7 +669,7 @@ mod tests {
             kind: LockupKind::Monthly,
             start_ts,
             end_ts,
-            padding: [0u8; 16],
+            padding: [0u8; 15],
         };
         let months_left = l.periods_left(curr_ts)?;
         assert_eq!(months_left, t.expected_months_left);
@@ -686,8 +689,9 @@ mod tests {
                 start_ts,
                 end_ts,
                 kind: t.kind,
-                padding: [0u8; 16],
+                padding: [0u8; 15],
             },
+            padding: [0; 13],
         };
         let curr_ts = start_ts + days_to_secs(t.curr_day);
         let power = d.voting_power_locked(curr_ts, t.amount_deposited, MAX_SECS_LOCKED)?;

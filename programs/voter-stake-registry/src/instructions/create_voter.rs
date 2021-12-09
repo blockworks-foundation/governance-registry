@@ -8,7 +8,7 @@ use std::mem::size_of;
 #[derive(Accounts)]
 #[instruction(voter_bump: u8, voter_weight_record_bump: u8)]
 pub struct CreateVoter<'info> {
-    pub registrar: Box<Account<'info, Registrar>>,
+    pub registrar: AccountLoader<'info, Registrar>,
 
     #[account(
         init_if_needed,
@@ -78,7 +78,7 @@ pub fn create_voter(
     }
 
     // Load accounts.
-    let registrar = &ctx.accounts.registrar;
+    let registrar = &ctx.accounts.registrar.load()?;
     let voter_authority = ctx.accounts.voter_authority.key();
 
     // Init the voter if is hasn't been already.

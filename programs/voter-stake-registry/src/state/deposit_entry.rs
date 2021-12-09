@@ -9,11 +9,8 @@ use std::convert::TryFrom;
 #[zero_copy]
 #[derive(Default)]
 pub struct DepositEntry {
-    // True if the deposit entry is being used.
-    pub is_used: bool,
-
-    // Points to the VotingMintConfig this deposit uses.
-    pub voting_mint_config_idx: u8,
+    // Locked state.
+    pub lockup: Lockup,
 
     /// Amount in deposited, in native currency. Withdraws of vested tokens
     /// directly reduce this amount.
@@ -32,11 +29,18 @@ pub struct DepositEntry {
     /// which should not change due to withdraws.
     pub amount_initially_locked_native: u64,
 
+    // True if the deposit entry is being used.
+    pub is_used: bool,
+
+    /// If the clawback authority is allowed to extract locked tokens.
     pub allow_clawback: bool,
 
-    // Locked state.
-    pub lockup: Lockup,
+    // Points to the VotingMintConfig this deposit uses.
+    pub voting_mint_config_idx: u8,
+
+    pub padding: [u8; 13],
 }
+const_assert!(std::mem::size_of::<DepositEntry>() == 32 + 2 * 8 + 3 + 13);
 
 impl DepositEntry {
     /// # Voting Power Caclulation

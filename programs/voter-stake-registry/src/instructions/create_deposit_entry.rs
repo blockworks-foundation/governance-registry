@@ -5,7 +5,7 @@ use anchor_spl::token::Mint;
 
 #[derive(Accounts)]
 pub struct CreateDepositEntry<'info> {
-    pub registrar: Box<Account<'info, Registrar>>,
+    pub registrar: AccountLoader<'info, Registrar>,
 
     // checking the PDA address it just an extra precaution,
     // the other constraints must be exhaustive
@@ -39,7 +39,7 @@ pub fn create_deposit_entry(
     allow_clawback: bool,
 ) -> Result<()> {
     // Load accounts.
-    let registrar = &ctx.accounts.registrar;
+    let registrar = &ctx.accounts.registrar.load()?;
     let voter = &mut ctx.accounts.voter.load_mut()?;
 
     // Get the exchange rate entry associated with this deposit.
