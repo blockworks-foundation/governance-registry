@@ -58,4 +58,6 @@ pub enum ErrorCode {
     VoterWeightOverflow,
     #[msg("")]
     LockupSaturationMustBePositive,
+    #[msg("")]
+    VotingMintConfiguredWithDifferentIndex,
 }

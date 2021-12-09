@@ -14,7 +14,7 @@ pub struct ConfigureVotingMint<'info> {
 
     /// Token account that all funds for this mint will be stored in
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         associated_token::authority = registrar,
         associated_token::mint = mint,
@@ -42,6 +42,9 @@ pub struct ConfigureVotingMint<'info> {
 /// * `lockup_scaled_factor`: max extra weight for lockups, in 1/1e9 units
 /// * `lockup_saturation_secs`: lockup duration at which the full vote weight
 ///   bonus is given to locked up deposits
+///
+/// This instruction can be called several times for the same mint and index to
+/// change the voting mint configuration.
 ///
 /// The vote weight for `amount` of native tokens will be
 /// ```
@@ -92,16 +95,26 @@ pub fn configure_voting_mint(
 ) -> Result<()> {
     require!(lockup_saturation_secs > 0, LockupSaturationMustBePositive);
     let registrar = &mut ctx.accounts.registrar.load_mut()?;
+    let mint = ctx.accounts.mint.key();
+    let existing_idx = registrar.voting_mint_config_index(mint);
+    let idx = idx as usize;
     require!(
-        (idx as usize) < registrar.voting_mints.len(),
+        idx < registrar.voting_mints.len(),
         OutOfBoundsVotingMintConfigIndex
     );
-    require!(
-        !registrar.voting_mints[idx as usize].in_use(),
-        VotingMintConfigIndexAlreadyInUse
-    );
-    registrar.voting_mints[idx as usize] = VotingMintConfig {
-        mint: ctx.accounts.mint.key(),
+    let voting_mint_config = &mut registrar.voting_mints[idx];
+
+    // Either it's a new mint for an unused index, or it's the correct old index.
+    match existing_idx {
+        Ok(existing_idx) => require!(existing_idx == idx, VotingMintConfiguredWithDifferentIndex),
+        Err(_) => require!(
+            !voting_mint_config.in_use(),
+            VotingMintConfigIndexAlreadyInUse
+        ),
+    };
+
+    *voting_mint_config = VotingMintConfig {
+        mint,
         digit_shift,
         deposit_scaled_factor,
         lockup_scaled_factor,
