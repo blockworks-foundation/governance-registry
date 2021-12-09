@@ -56,4 +56,6 @@ pub enum ErrorCode {
     InvalidRealmAuthority,
     #[msg("")]
     VoterWeightOverflow,
+    #[msg("")]
+    LockupSaturationMustBePositive,
 }

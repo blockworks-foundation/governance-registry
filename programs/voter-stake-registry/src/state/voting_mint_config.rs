@@ -79,7 +79,7 @@ impl VotingMintConfig {
 
     /// Whether this voting mint is configured.
     pub fn in_use(&self) -> bool {
-        self.deposit_scaled_factor > 0 || self.lockup_scaled_factor > 0
+        self.lockup_saturation_secs > 0
     }
 }
 

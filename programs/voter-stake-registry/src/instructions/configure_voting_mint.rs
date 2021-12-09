@@ -90,10 +90,7 @@ pub fn configure_voting_mint(
     lockup_saturation_secs: u64,
     grant_authority: Option<Pubkey>,
 ) -> Result<()> {
-    require!(
-        deposit_scaled_factor > 0 || lockup_scaled_factor > 0,
-        InvalidRate
-    );
+    require!(lockup_saturation_secs > 0, LockupSaturationMustBePositive);
     let registrar = &mut ctx.accounts.registrar;
     require!(
         (idx as usize) < registrar.voting_mints.len(),
