@@ -60,4 +60,6 @@ pub enum ErrorCode {
     LockupSaturationMustBePositive,
     #[msg("")]
     VotingMintConfiguredWithDifferentIndex,
+    #[msg("")]
+    InternalProgramError,
 }

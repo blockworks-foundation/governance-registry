@@ -77,7 +77,10 @@ pub fn clawback(ctx: Context<Clawback>, deposit_entry_index: u8) -> Result<()> {
     let locked_amount = deposit_entry.amount_locked(curr_ts);
 
     // Update deposit book keeping.
-    assert!(locked_amount <= deposit_entry.amount_deposited_native);
+    require!(
+        locked_amount <= deposit_entry.amount_deposited_native,
+        InternalProgramError
+    );
     deposit_entry.amount_deposited_native -= locked_amount;
 
     // Transfer the tokens to withdraw.

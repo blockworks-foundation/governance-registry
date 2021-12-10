@@ -100,7 +100,10 @@ pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) ->
     );
 
     // Bookkeeping for withdrawn funds.
-    assert!(amount <= deposit_entry.amount_deposited_native);
+    require!(
+        amount <= deposit_entry.amount_deposited_native,
+        InternalProgramError
+    );
     deposit_entry.amount_deposited_native -= amount;
 
     // Transfer the tokens to withdraw.

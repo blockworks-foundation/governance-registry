@@ -126,8 +126,8 @@ impl Lockup {
             .start_ts
             .checked_add(i64::try_from(periods.checked_mul(period_secs).unwrap()).unwrap())
             .unwrap();
-        assert!(self.start_ts <= self.end_ts);
-        assert!(self.period_current(curr_ts)? == 0);
+        require!(self.start_ts <= self.end_ts, InternalProgramError);
+        require!(self.period_current(curr_ts)? == 0, InternalProgramError);
         Ok(())
     }
 }

@@ -80,7 +80,10 @@ pub fn deposit(ctx: Context<Deposit>, deposit_entry_index: u8, amount: u64) -> R
     //   the remaining periods.
     let curr_ts = registrar.clock_unix_timestamp();
     let vested_amount = d_entry.vested(curr_ts)?;
-    assert!(vested_amount <= d_entry.amount_initially_locked_native);
+    require!(
+        vested_amount <= d_entry.amount_initially_locked_native,
+        InternalProgramError
+    );
     d_entry.amount_initially_locked_native -= vested_amount;
     d_entry.lockup.remove_past_periods(curr_ts)?;
 
