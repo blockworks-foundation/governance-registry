@@ -2,7 +2,6 @@ use crate::error::*;
 use crate::state::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount};
-use std::convert::TryFrom;
 
 #[derive(Accounts)]
 pub struct Deposit<'info> {
@@ -83,33 +82,19 @@ pub fn deposit(ctx: Context<Deposit>, deposit_entry_index: u8, amount: u64) -> R
     let vested_amount = d_entry.vested(curr_ts)?;
     assert!(vested_amount <= d_entry.amount_initially_locked_native);
     d_entry.amount_initially_locked_native -= vested_amount;
-    d_entry.lockup.start_ts = d_entry
-        .lockup
-        .start_ts
-        .checked_add(
-            i64::try_from(d_entry.lockup.period_current(curr_ts)?)
-                .unwrap()
-                .checked_mul(d_entry.lockup.kind.period_secs())
-                .unwrap(),
-        )
-        .unwrap();
-    assert!(d_entry.lockup.start_ts <= d_entry.lockup.end_ts);
-    assert!(d_entry.lockup.period_current(curr_ts)? == 0);
+    d_entry.lockup.remove_past_periods(curr_ts)?;
 
     // Deposit tokens into the registrar and increase the lockup amount too.
     token::transfer(ctx.accounts.transfer_ctx(), amount)?;
     d_entry.amount_deposited_native += amount;
     d_entry.amount_initially_locked_native += amount;
 
-    let start_ts = d_entry.lockup.start_ts;
-    let end_ts = d_entry.lockup.end_ts;
     msg!(
-        "Deposited amount {} at deposit index {} with lockup kind {:?}, and start ts {}, end ts {}",
+        "Deposited amount {} at deposit index {} with lockup kind {:?} and {} seconds left",
         amount,
         deposit_entry_index,
         d_entry.lockup.kind,
-        start_ts,
-        end_ts,
+        d_entry.lockup.seconds_left(curr_ts),
     );
 
     Ok(())

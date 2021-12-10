@@ -145,15 +145,12 @@ pub fn grant(
     d_entry.amount_deposited_native = amount;
     d_entry.amount_initially_locked_native = amount;
 
-    let start_ts = d_entry.lockup.start_ts;
-    let end_ts = d_entry.lockup.end_ts;
     msg!(
-        "Granted amount {} at deposit index {} with lockup kind {:?}, and start ts {}, end ts {}",
+        "Granted amount {} at deposit index {} with lockup kind {:?} for {} periods",
         amount,
         free_entry_idx,
         d_entry.lockup.kind,
-        start_ts,
-        end_ts,
+        periods,
     );
 
     Ok(())

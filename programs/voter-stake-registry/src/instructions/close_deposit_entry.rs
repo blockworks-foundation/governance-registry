@@ -31,7 +31,7 @@ pub fn close_deposit_entry(ctx: Context<CloseDepositEntry>, deposit_entry_index:
     // with a different locking kind or locking end time before funds are deposited.
     if d.allow_clawback {
         require!(
-            d.lockup.end_ts < Clock::get()?.unix_timestamp,
+            d.lockup.expired(Clock::get()?.unix_timestamp),
             DepositStillLocked
         );
     }

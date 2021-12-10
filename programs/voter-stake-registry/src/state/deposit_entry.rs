@@ -109,7 +109,7 @@ impl DepositEntry {
         max_locked_vote_weight: u64,
         lockup_saturation_secs: u64,
     ) -> Result<u64> {
-        if curr_ts >= self.lockup.end_ts || max_locked_vote_weight == 0 {
+        if self.lockup.expired(curr_ts) || max_locked_vote_weight == 0 {
             return Ok(0);
         }
         match self.lockup.kind {
@@ -204,9 +204,11 @@ impl DepositEntry {
         // In the example above, periods_total was 5.
         let denominator = periods_total * lockup_saturation_secs;
 
-        let secs_to_closest_cliff =
-            u64::try_from(self.lockup.end_ts - (period_secs * (periods_left - 1)) as i64 - curr_ts)
-                .unwrap();
+        let secs_to_closest_cliff = self
+            .lockup
+            .seconds_left(curr_ts)
+            .checked_sub(period_secs * (periods_left - 1))
+            .unwrap();
 
         let lockup_saturation_periods =
             (lockup_saturation_secs + period_secs - secs_to_closest_cliff) / period_secs;
@@ -245,10 +247,7 @@ impl DepositEntry {
     /// Returns the amount of unlocked tokens for this deposit--in native units
     /// of the original token amount (not scaled by the exchange rate).
     pub fn vested(&self, curr_ts: i64) -> Result<u64> {
-        if curr_ts < self.lockup.start_ts {
-            return Ok(0);
-        }
-        if curr_ts >= self.lockup.end_ts {
+        if self.lockup.expired(curr_ts) {
             return Ok(self.amount_initially_locked_native);
         }
         match self.lockup.kind {
@@ -262,6 +261,9 @@ impl DepositEntry {
     fn vested_linearly(&self, curr_ts: i64) -> Result<u64> {
         let period_current = self.lockup.period_current(curr_ts)?;
         let periods_total = self.lockup.periods_total()?;
+        if period_current == 0 {
+            return Ok(0);
+        }
         if period_current >= periods_total {
             return Ok(self.amount_initially_locked_native);
         }

@@ -110,15 +110,12 @@ pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) ->
         amount,
     )?;
 
-    let start_ts = deposit_entry.lockup.start_ts;
-    let end_ts = deposit_entry.lockup.end_ts;
     msg!(
-        "Withdrew amount {} at deposit index {} with lockup kind {:?}, and start ts {}, end ts {}",
+        "Withdrew amount {} at deposit index {} with lockup kind {:?} and {} seconds left",
         amount,
         deposit_entry_index,
         deposit_entry.lockup.kind,
-        start_ts,
-        end_ts,
+        deposit_entry.lockup.seconds_left(curr_ts),
     );
 
     // Update the voter weight record

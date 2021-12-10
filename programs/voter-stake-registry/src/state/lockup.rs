@@ -10,15 +10,15 @@ vote_weight_record!(crate::ID);
 
 /// Seconds in one day.
 #[cfg(feature = "localnet")]
-pub const SECS_PER_DAY: i64 = 10;
+pub const SECS_PER_DAY: u64 = 10;
 #[cfg(not(feature = "localnet"))]
-pub const SECS_PER_DAY: i64 = 86_400;
+pub const SECS_PER_DAY: u64 = 86_400;
 
 /// Seconds in one month.
 #[cfg(feature = "localnet")]
-pub const SECS_PER_MONTH: i64 = 10;
+pub const SECS_PER_MONTH: u64 = 10;
 #[cfg(not(feature = "localnet"))]
-pub const SECS_PER_MONTH: i64 = 365 * SECS_PER_DAY / 12;
+pub const SECS_PER_MONTH: u64 = 365 * SECS_PER_DAY / 12;
 
 #[zero_copy]
 pub struct Lockup {
@@ -29,10 +29,10 @@ pub struct Lockup {
     ///
     /// Similarly vote power computations don't care about start_ts and always
     /// assume the full interval from now to end_ts.
-    pub start_ts: i64,
+    start_ts: i64,
 
     /// End of the lockup.
-    pub end_ts: i64,
+    end_ts: i64,
 
     /// Type of lockup.
     pub kind: LockupKind,
@@ -60,12 +60,22 @@ impl Lockup {
             kind,
             start_ts,
             end_ts: start_ts
-                .checked_add(i64::from(periods).checked_mul(kind.period_secs()).unwrap())
+                .checked_add(
+                    i64::try_from((periods as u64).checked_mul(kind.period_secs()).unwrap())
+                        .unwrap(),
+                )
                 .unwrap(),
             padding: [0; 15],
         })
     }
 
+    /// True when the lockup is finished.
+    pub fn expired(&self, curr_ts: i64) -> bool {
+        self.seconds_left(curr_ts) == 0
+    }
+
+    /// Number of seconds left in the lockup.
+    /// May be more than end_ts-start_ts if curr_ts < start_ts.
     pub fn seconds_left(&self, curr_ts: i64) -> u64 {
         if curr_ts >= self.end_ts {
             0
@@ -75,42 +85,50 @@ impl Lockup {
     }
 
     /// Returns the number of periods left on the lockup.
+    /// Returns 0 after lockup has expired and periods_total before start_ts.
     pub fn periods_left(&self, curr_ts: i64) -> Result<u64> {
-        Ok(self
-            .periods_total()?
-            .saturating_sub(self.period_current(curr_ts)?))
-    }
-
-    /// Returns the current period in the vesting schedule.
-    pub fn period_current(&self, curr_ts: i64) -> Result<u64> {
         let period_secs = self.kind.period_secs();
         if period_secs == 0 {
             return Ok(0);
         }
         if curr_ts < self.start_ts {
-            return Ok(0);
+            return self.periods_total();
         }
-        let period = u64::try_from({
-            let secs_elapsed = curr_ts.saturating_sub(self.start_ts);
-            secs_elapsed.checked_div(period_secs).unwrap()
-        })
-        .map_err(|_| ErrorCode::UnableToConvert)?;
-        Ok(period)
+        Ok((self.seconds_left(curr_ts) + period_secs - 1) / period_secs)
     }
 
-    /// Returns the total amount of periods in the lockup period.
+    /// Returns the current period in the vesting schedule.
+    /// Will report periods_total() after lockup has expired and 0 before start_ts.
+    pub fn period_current(&self, curr_ts: i64) -> Result<u64> {
+        Ok(self
+            .periods_total()?
+            .saturating_sub(self.periods_left(curr_ts)?))
+    }
+
+    /// Returns the total amount of periods in the lockup.
     pub fn periods_total(&self) -> Result<u64> {
         let period_secs = self.kind.period_secs();
         if period_secs == 0 {
             return Ok(0);
         }
 
-        // Number of seconds in the entire lockup.
-        let lockup_secs = self.end_ts.checked_sub(self.start_ts).unwrap();
+        let lockup_secs = self.seconds_left(self.start_ts);
         require!(lockup_secs % period_secs == 0, InvalidLockupPeriod);
 
-        // Total periods in the entire lockup.
-        Ok(u64::try_from(lockup_secs.checked_div(period_secs).unwrap()).unwrap())
+        Ok(lockup_secs / period_secs)
+    }
+
+    /// Remove the vesting periods that are now in the past.
+    pub fn remove_past_periods(&mut self, curr_ts: i64) -> Result<()> {
+        let periods = self.period_current(curr_ts)?;
+        let period_secs = self.kind.period_secs();
+        self.start_ts = self
+            .start_ts
+            .checked_add(i64::try_from(periods.checked_mul(period_secs).unwrap()).unwrap())
+            .unwrap();
+        assert!(self.start_ts <= self.end_ts);
+        assert!(self.period_current(curr_ts)? == 0);
+        Ok(())
     }
 }
 
@@ -128,7 +146,7 @@ impl LockupKind {
     /// to create_deposit_entry. This describes a period's length.
     ///
     /// For vesting lockups, the period length is also the vesting period.
-    pub fn period_secs(&self) -> i64 {
+    pub fn period_secs(&self) -> u64 {
         match self {
             LockupKind::None => 0,
             LockupKind::Daily => SECS_PER_DAY,
@@ -146,6 +164,30 @@ mod tests {
     // intentionally not a multiple of a day
     const MAX_SECS_LOCKED: u64 = 365 * 24 * 60 * 60 + 7 * 60 * 60;
     const MAX_DAYS_LOCKED: f64 = MAX_SECS_LOCKED as f64 / (24.0 * 60.0 * 60.0);
+
+    #[test]
+    pub fn period_computations() -> Result<()> {
+        let lockup = Lockup::new_from_periods(LockupKind::Daily, 1000, 3)?;
+        let day = SECS_PER_DAY as i64;
+        assert_eq!(lockup.periods_total()?, 3);
+        assert_eq!(lockup.period_current(0)?, 0);
+        assert_eq!(lockup.periods_left(0)?, 3);
+        assert_eq!(lockup.period_current(999)?, 0);
+        assert_eq!(lockup.periods_left(999)?, 3);
+        assert_eq!(lockup.period_current(1000)?, 0);
+        assert_eq!(lockup.periods_left(1000)?, 3);
+        assert_eq!(lockup.period_current(1000 + day - 1)?, 0);
+        assert_eq!(lockup.periods_left(1000 + day - 1)?, 3);
+        assert_eq!(lockup.period_current(1000 + day)?, 1);
+        assert_eq!(lockup.periods_left(1000 + day)?, 2);
+        assert_eq!(lockup.period_current(1000 + 3 * day - 1)?, 2);
+        assert_eq!(lockup.periods_left(1000 + 3 * day - 1)?, 1);
+        assert_eq!(lockup.period_current(1000 + 3 * day)?, 3);
+        assert_eq!(lockup.periods_left(1000 + 3 * day)?, 0);
+        assert_eq!(lockup.period_current(100 * day)?, 3);
+        assert_eq!(lockup.periods_left(100 * day)?, 0);
+        Ok(())
+    }
 
     #[test]
     pub fn days_left_start() -> Result<()> {

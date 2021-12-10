@@ -18,11 +18,12 @@ async fn get_lockup_data(
         .get_account::<voter_stake_registry::state::Voter>(voter)
         .await;
     let d = voter.deposits[index as usize];
+    let duration = d.lockup.periods_total().unwrap() * d.lockup.kind.period_secs();
     (
-        // time since lockup
-        (now - d.lockup.start_ts) as u64,
+        // time since lockup start (saturating at "duration")
+        (duration - d.lockup.seconds_left(now)) as u64,
         // duration of lockup
-        (d.lockup.end_ts - d.lockup.start_ts) as u64,
+        duration,
         d.amount_initially_locked_native,
         d.amount_deposited_native,
         d.amount_withdrawable(now),
@@ -213,10 +214,7 @@ async fn test_reset_lockup() -> Result<(), TransportError> {
     advance_time(4 * day + hour).await;
     context.solana.advance_clock_by_slots(2).await;
 
-    assert_eq!(
-        lockup_status(5).await,
-        (4 * day + hour, 4 * day, 80, 80, 80)
-    );
+    assert_eq!(lockup_status(5).await, (4 * day, 4 * day, 80, 80, 80));
     reset_lockup(5, 1).await.unwrap();
     assert_eq!(lockup_status(5).await, (0, 1 * day, 80, 80, 0));
     withdraw(5, 10).await.expect_err("nothing unlocked");
@@ -225,11 +223,11 @@ async fn test_reset_lockup() -> Result<(), TransportError> {
     advance_time(day + hour).await;
     context.solana.advance_clock_by_slots(2).await;
 
-    assert_eq!(lockup_status(5).await, (day + hour, 1 * day, 80, 80, 80));
+    assert_eq!(lockup_status(5).await, (day, day, 80, 80, 80));
     withdraw(5, 10).await.unwrap();
-    assert_eq!(lockup_status(5).await, (day + hour, 1 * day, 80, 70, 70));
+    assert_eq!(lockup_status(5).await, (day, day, 80, 70, 70));
     deposit(5, 5).await.unwrap();
-    assert_eq!(lockup_status(5).await, (hour, 0, 5, 75, 75));
+    assert_eq!(lockup_status(5).await, (0, 0, 5, 75, 75));
     reset_lockup(5, 1).await.unwrap();
     assert_eq!(lockup_status(5).await, (0, 1 * day, 75, 75, 0));
     deposit(5, 15).await.unwrap();
