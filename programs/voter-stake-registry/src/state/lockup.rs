@@ -76,7 +76,10 @@ impl Lockup {
 
     /// Number of seconds left in the lockup.
     /// May be more than end_ts-start_ts if curr_ts < start_ts.
-    pub fn seconds_left(&self, curr_ts: i64) -> u64 {
+    pub fn seconds_left(&self, mut curr_ts: i64) -> u64 {
+        if self.kind == LockupKind::Constant {
+            curr_ts = self.start_ts;
+        }
         if curr_ts >= self.end_ts {
             0
         } else {
@@ -139,6 +142,7 @@ pub enum LockupKind {
     Daily,
     Monthly,
     Cliff,
+    Constant,
 }
 
 impl LockupKind {
@@ -152,6 +156,18 @@ impl LockupKind {
             LockupKind::Daily => SECS_PER_DAY,
             LockupKind::Monthly => SECS_PER_MONTH,
             LockupKind::Cliff => SECS_PER_DAY, // arbitrary choice
+            LockupKind::Constant => SECS_PER_DAY, // arbitrary choice
+        }
+    }
+
+    /// Lockups cannot decrease in strictness
+    pub fn strictness(&self) -> u8 {
+        match self {
+            LockupKind::None => 0,
+            LockupKind::Daily => 1,
+            LockupKind::Monthly => 2,
+            LockupKind::Cliff => 3, // can freely move between Cliff and Constant
+            LockupKind::Constant => 3,
         }
     }
 }

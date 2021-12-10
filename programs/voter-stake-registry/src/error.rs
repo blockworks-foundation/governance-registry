@@ -62,4 +62,10 @@ pub enum ErrorCode {
     VotingMintConfiguredWithDifferentIndex,
     #[msg("")]
     InternalProgramError,
+    #[msg("")]
+    InsufficientDepositedTokens,
+    #[msg("")]
+    MustKeepTokensLocked,
+    #[msg("")]
+    InvalidLockupKind,
 }

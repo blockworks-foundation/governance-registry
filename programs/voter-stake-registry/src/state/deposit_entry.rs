@@ -127,6 +127,9 @@ impl DepositEntry {
             LockupKind::Cliff => {
                 self.voting_power_cliff(curr_ts, max_locked_vote_weight, lockup_saturation_secs)
             }
+            LockupKind::Constant => {
+                self.voting_power_cliff(curr_ts, max_locked_vote_weight, lockup_saturation_secs)
+            }
         }
     }
 
@@ -255,6 +258,7 @@ impl DepositEntry {
             LockupKind::Daily => self.vested_linearly(curr_ts),
             LockupKind::Monthly => self.vested_linearly(curr_ts),
             LockupKind::Cliff => Ok(0),
+            LockupKind::Constant => Ok(0),
         }
     }
 

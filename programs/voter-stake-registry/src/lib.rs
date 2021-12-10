@@ -145,9 +145,19 @@ pub mod voter_stake_registry {
     pub fn reset_lockup(
         ctx: Context<ResetLockup>,
         deposit_entry_index: u8,
+        target_deposit_entry_index: u8,
+        kind: LockupKind,
         periods: u32,
+        amount: u64,
     ) -> Result<()> {
-        instructions::reset_lockup(ctx, deposit_entry_index, periods)
+        instructions::reset_lockup(
+            ctx,
+            deposit_entry_index,
+            target_deposit_entry_index,
+            kind,
+            periods,
+            amount,
+        )
     }
 
     pub fn update_voter_weight_record(ctx: Context<UpdateVoterWeightRecord>) -> Result<()> {
