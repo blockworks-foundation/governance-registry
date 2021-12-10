@@ -364,6 +364,7 @@ impl AddinCookie {
                 vault: voting_mint.vault,
                 deposit_token,
                 authority: authority.pubkey(),
+                payer: authority.pubkey(),
                 system_program: solana_sdk::system_program::id(),
                 token_program: spl_token::id(),
                 rent: solana_program::sysvar::rent::id(),

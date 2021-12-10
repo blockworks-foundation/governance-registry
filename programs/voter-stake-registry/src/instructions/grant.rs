@@ -22,7 +22,7 @@ pub struct Grant<'info> {
         init_if_needed,
         seeds = [registrar.key().as_ref(), b"voter".as_ref(), voter_authority.key().as_ref()],
         bump = voter_bump,
-        payer = authority,
+        payer = payer,
         space = 8 + size_of::<Voter>(),
     )]
     pub voter: AccountLoader<'info, Voter>,
@@ -37,7 +37,7 @@ pub struct Grant<'info> {
         init_if_needed,
         seeds = [registrar.key().as_ref(), b"voter-weight-record".as_ref(), voter_authority.key().as_ref()],
         bump = voter_weight_record_bump,
-        payer = authority,
+        payer = payer,
         space = 150,
     )]
     pub voter_weight_record: Account<'info, VoterWeightRecord>,
@@ -55,8 +55,10 @@ pub struct Grant<'info> {
     )]
     pub deposit_token: Box<Account<'info, TokenAccount>>,
 
-    #[account(mut)]
     pub authority: Signer<'info>,
+
+    #[account(mut)]
+    pub payer: Signer<'info>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
