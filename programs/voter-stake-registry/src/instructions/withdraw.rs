@@ -104,7 +104,10 @@ pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) ->
         amount <= deposit_entry.amount_deposited_native,
         InternalProgramError
     );
-    deposit_entry.amount_deposited_native -= amount;
+    deposit_entry.amount_deposited_native = deposit_entry
+        .amount_deposited_native
+        .checked_sub(amount)
+        .unwrap();
 
     // Transfer the tokens to withdraw.
     let registrar_seeds = registrar_seeds!(registrar);

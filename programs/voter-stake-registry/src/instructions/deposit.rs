@@ -79,18 +79,15 @@ pub fn deposit(ctx: Context<Deposit>, deposit_entry_index: u8, amount: u64) -> R
     // - add the new funds to the locked up token count, so they will vest over
     //   the remaining periods.
     let curr_ts = registrar.clock_unix_timestamp();
-    let vested_amount = d_entry.vested(curr_ts)?;
-    require!(
-        vested_amount <= d_entry.amount_initially_locked_native,
-        InternalProgramError
-    );
-    d_entry.amount_initially_locked_native -= vested_amount;
-    d_entry.lockup.remove_past_periods(curr_ts)?;
+    d_entry.resolve_vesting(curr_ts)?;
 
     // Deposit tokens into the registrar and increase the lockup amount too.
     token::transfer(ctx.accounts.transfer_ctx(), amount)?;
-    d_entry.amount_deposited_native += amount;
-    d_entry.amount_initially_locked_native += amount;
+    d_entry.amount_deposited_native = d_entry.amount_deposited_native.checked_add(amount).unwrap();
+    d_entry.amount_initially_locked_native = d_entry
+        .amount_initially_locked_native
+        .checked_add(amount)
+        .unwrap();
 
     msg!(
         "Deposited amount {} at deposit index {} with lockup kind {:?} and {} seconds left",

@@ -296,4 +296,22 @@ impl DepositEntry {
             .checked_sub(self.amount_locked(curr_ts))
             .unwrap()
     }
+
+    /// Adjusts the deposit and remaining lockup periods such that
+    /// no parts of amount_initially_locked_native have vested.
+    ///
+    /// That makes it easier to deal with changes to the locked
+    /// amount because amount_initially_locked_native represents
+    /// exactly the amount that is locked.
+    pub fn resolve_vesting(&mut self, curr_ts: i64) -> Result<()> {
+        let vested_amount = self.vested(curr_ts)?;
+        require!(
+            vested_amount <= self.amount_initially_locked_native,
+            InternalProgramError
+        );
+        self.amount_initially_locked_native -= vested_amount;
+        self.lockup.remove_past_periods(curr_ts)?;
+        require!(self.vested(curr_ts)? == 0, InternalProgramError);
+        Ok(())
+    }
 }

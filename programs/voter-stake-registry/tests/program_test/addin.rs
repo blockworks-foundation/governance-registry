@@ -565,18 +565,14 @@ impl AddinCookie {
         voter: &VoterCookie,
         authority: &Keypair,
         deposit_entry_index: u8,
-        target_deposit_entry_index: u8,
         kind: voter_stake_registry::state::LockupKind,
         periods: u32,
-        amount: u64,
     ) -> Result<(), TransportError> {
         let data =
             anchor_lang::InstructionData::data(&voter_stake_registry::instruction::ResetLockup {
                 deposit_entry_index,
-                target_deposit_entry_index,
                 kind,
                 periods,
-                amount,
             });
 
         let accounts = anchor_lang::ToAccountMetas::to_account_metas(

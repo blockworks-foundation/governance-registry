@@ -145,17 +145,22 @@ pub mod voter_stake_registry {
     pub fn reset_lockup(
         ctx: Context<ResetLockup>,
         deposit_entry_index: u8,
-        target_deposit_entry_index: u8,
         kind: LockupKind,
         periods: u32,
+    ) -> Result<()> {
+        instructions::reset_lockup(ctx, deposit_entry_index, kind, periods)
+    }
+
+    pub fn internal_transfer(
+        ctx: Context<InternalTransfer>,
+        source_deposit_entry_index: u8,
+        target_deposit_entry_index: u8,
         amount: u64,
     ) -> Result<()> {
-        instructions::reset_lockup(
+        instructions::internal_transfer(
             ctx,
-            deposit_entry_index,
+            source_deposit_entry_index,
             target_deposit_entry_index,
-            kind,
-            periods,
             amount,
         )
     }
