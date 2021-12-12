@@ -138,10 +138,20 @@ impl Lockup {
 #[repr(u8)]
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq)]
 pub enum LockupKind {
+    /// No lockup, tokens can be withdrawn as long as not engaged in a proposal.
     None,
+
+    /// Lock up for a number of days, where a linear fraction vests each day.
     Daily,
+
+    /// Lock up for a number of months, where a linear fraction vests each month.
     Monthly,
+
+    /// Lock up for a number of days, no vesting.
     Cliff,
+
+    /// Lock up permanently. The number of days specified becomes the minimum
+    /// unlock period when the deposit (or a part of it) is changed to Cliff.
     Constant,
 }
 

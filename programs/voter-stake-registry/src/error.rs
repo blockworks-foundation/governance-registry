@@ -63,7 +63,7 @@ pub enum ErrorCode {
     #[msg("")]
     InternalProgramError,
     #[msg("")]
-    InsufficientDepositedTokens,
+    InsufficientLockedTokens,
     #[msg("")]
     MustKeepTokensLocked,
     #[msg("")]

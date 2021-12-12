@@ -103,7 +103,13 @@ realm authority to:
 
 - [`ResetLockup`](programs/voter-stake-registry/src/instructions/reset_lockup.rs)
 
-  Re-lock tokens where the lockup has expired, or increase the duration of the lockup.
+  Re-lock tokens where the lockup has expired, or increase the duration of the lockup or
+  change the lockup kind.
+
+- [`InternalTransfer`](programs/voter-stake-registry/src/instructions/internal_transfer.rs)
+
+  Transfer locked tokens from one deposit entry to another. Useful for splitting off a
+  chunk of a "constant" lockup deposit entry that you want to start the unlock process on.
 
 - [`UpdateVoterWeightRecord`](programs/voter-stake-registry/src/instructions/update_voter_weight_record.rs)
 

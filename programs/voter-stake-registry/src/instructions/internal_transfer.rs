@@ -4,9 +4,10 @@ use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct InternalTransfer<'info> {
+    pub registrar: AccountLoader<'info, Registrar>,
+
     // checking the PDA address it just an extra precaution,
     // the other constraints must be exhaustive
-    pub registrar: AccountLoader<'info, Registrar>,
     #[account(
         mut,
         seeds = [registrar.key().as_ref(), b"voter".as_ref(), voter_authority.key().as_ref()],
@@ -17,9 +18,19 @@ pub struct InternalTransfer<'info> {
     pub voter_authority: Signer<'info>,
 }
 
-/// Resets a lockup to start at the current slot timestamp and to last for
-/// `periods`, which must be >= the number of periods left on the lockup.
-/// This will re-lock any non-withdrawn vested funds.
+/// Transfers locked tokens from the source deposit entry to the target deposit entry.
+///
+/// The target deposit entry must have equal or longer lockup period, and be of a kind
+/// that is at least equally strict.
+///
+/// Note that this never transfers withdrawable tokens, only tokens that are still
+/// locked up.
+///
+/// The primary usecases are:
+/// - consolidating multiple small deposit entries into a single big one for cleanup
+/// - transfering a small part of a big "constant" lockup deposit entry into a "cliff"
+///   locked deposit entry to start the unlocking process (reset_lockup could only
+///   change the whole deposit entry to "cliff")
 pub fn internal_transfer(
     ctx: Context<InternalTransfer>,
     source_deposit_entry_index: u8,
@@ -42,8 +53,8 @@ pub fn internal_transfer(
 
     // Reduce source amounts
     require!(
-        amount <= source.amount_deposited_native,
-        InsufficientDepositedTokens
+        amount <= source.amount_initially_locked_native,
+        InsufficientLockedTokens
     );
     source.amount_deposited_native = source.amount_deposited_native.checked_sub(amount).unwrap();
     source.amount_initially_locked_native =

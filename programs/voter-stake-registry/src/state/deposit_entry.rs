@@ -303,6 +303,21 @@ impl DepositEntry {
     /// That makes it easier to deal with changes to the locked
     /// amount because amount_initially_locked_native represents
     /// exactly the amount that is locked.
+    ///
+    /// Example:
+    ///   If 30 tokens are locked up over 3 months, vesting each month,
+    ///   then after month 2:
+    ///      amount_initially_locked_native = 30
+    ///      amount_deposited_native = 30
+    ///      vested() = 20
+    ///      period_current() = 2
+    ///      periods_total() = 3
+    ///   And after this function was called:
+    ///      amount_initially_locked_native = 10
+    ///      amount_deposited_native = 30
+    ///      vested() = 0
+    ///      period_current() = 0
+    ///      periods_total() = 1
     pub fn resolve_vesting(&mut self, curr_ts: i64) -> Result<()> {
         let vested_amount = self.vested(curr_ts)?;
         require!(
