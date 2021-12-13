@@ -44,13 +44,11 @@ pub fn reset_lockup(
         InvalidLockupKind
     );
 
-    // Allowing changes to clawback-enabled deposits could be used to avoid
-    // clawback by making proposal instructions target the wrong entry index.
-    require!(!source.allow_clawback, InvalidDays);
+    // Don't re-lock clawback deposits. Users must withdraw and create a new one.
+    require!(!source.allow_clawback, InvalidChangeToClawbackDepositEntry);
 
-    // Change the deposit entry internally.
+    // Change the deposit entry.
     let d_entry = voter.active_deposit_mut(deposit_entry_index)?;
-
     d_entry.amount_initially_locked_native = d_entry.amount_deposited_native;
     d_entry.lockup = Lockup::new_from_periods(kind, curr_ts, periods)?;
 

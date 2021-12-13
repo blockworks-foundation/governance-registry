@@ -68,4 +68,6 @@ pub enum ErrorCode {
     MustKeepTokensLocked,
     #[msg("")]
     InvalidLockupKind,
+    #[msg("")]
+    InvalidChangeToClawbackDepositEntry,
 }
