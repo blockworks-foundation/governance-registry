@@ -599,6 +599,47 @@ impl AddinCookie {
     }
 
     #[allow(dead_code)]
+    pub async fn internal_transfer(
+        &self,
+        registrar: &RegistrarCookie,
+        voter: &VoterCookie,
+        authority: &Keypair,
+        source_deposit_entry_index: u8,
+        target_deposit_entry_index: u8,
+        amount: u64,
+    ) -> Result<(), TransportError> {
+        let data = anchor_lang::InstructionData::data(
+            &voter_stake_registry::instruction::InternalTransfer {
+                source_deposit_entry_index,
+                target_deposit_entry_index,
+                amount,
+            },
+        );
+
+        let accounts = anchor_lang::ToAccountMetas::to_account_metas(
+            &voter_stake_registry::accounts::InternalTransfer {
+                registrar: registrar.address,
+                voter: voter.address,
+                voter_authority: authority.pubkey(),
+            },
+            None,
+        );
+
+        let instructions = vec![Instruction {
+            program_id: self.program_id,
+            accounts,
+            data,
+        }];
+
+        // clone the secrets
+        let signer = Keypair::from_base58_string(&authority.to_base58_string());
+
+        self.solana
+            .process_transaction(&instructions, Some(&[&signer]))
+            .await
+    }
+
+    #[allow(dead_code)]
     pub async fn set_time_offset(
         &self,
         registrar: &RegistrarCookie,
