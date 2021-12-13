@@ -68,6 +68,34 @@ realm authority to:
 3. If necessary, later make a proposal to call `Clawback` on their deposit to
    retrieve all remaining locked tokens.
 
+## Manage Constant Maturity Deposits
+
+Constant maturity deposits are useful when there's a vote weight bonus for
+locking up tokens: With cliff or daily/monthly vested deposits the remaining
+lockup period decreases as the time of maturity approaches and thus the vote
+weight decreases over time as well.
+
+Constant maturity lockup keeps tokens at a fixed maturity. That guarantees a
+fixed vote weight, but also means they need to be manually transitioned to a
+different lockup type before they can eventually be withdrawn.
+
+Setting up a constant maturity lockup is easy:
+
+1. Create a deposit entry of `Constant` lockup type with the chosen number of
+   days.
+2. `Deposit` tokens into it.
+3. Use it to vote.
+
+If you want access to the tokens again, you need to start the unlocking process
+by either
+- changing the whole deposit entry to `Cliff` with `ResetLockup`, or
+- creating a new `Cliff` deposit entry and transfering some locked tokens from
+  your `Constant` deposit entry over with `InternalTransfer`.
+
+In both cases you'll need to wait for the cliff to be reached before being able
+to access the tokens again.
+
+
 # Instruction Overview
 
 ## Setup
