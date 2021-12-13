@@ -330,3 +330,72 @@ impl DepositEntry {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    pub fn resolve_vesting() -> Result<()> {
+        let mut deposit = DepositEntry {
+            amount_deposited_native: 35,
+            amount_initially_locked_native: 30,
+            lockup: Lockup::new_from_periods(LockupKind::Monthly, 1000, 3).unwrap(),
+            is_used: true,
+            allow_clawback: false,
+            voting_mint_config_idx: 0,
+            padding: [0; 13],
+        };
+        let initial_deposit = deposit.clone();
+        let month = deposit.lockup.kind.period_secs() as i64;
+        // function to avoid unaligned references when used with assert!()
+        let amount_initially_locked =
+            |deposit: &DepositEntry| deposit.amount_initially_locked_native;
+
+        let mut time = 1001;
+        assert_eq!(deposit.vested(time).unwrap(), 0);
+        assert_eq!(deposit.amount_withdrawable(time), 5);
+        deposit.resolve_vesting(time).unwrap(); // no effect
+        assert_eq!(deposit.vested(time).unwrap(), 0);
+        assert_eq!(deposit.amount_withdrawable(time), 5);
+        assert_eq!(
+            deposit.lockup.seconds_left(time),
+            initial_deposit.lockup.seconds_left(time)
+        );
+        assert_eq!(deposit.lockup.period_current(time).unwrap(), 0);
+        assert_eq!(deposit.lockup.periods_total().unwrap(), 3);
+        assert_eq!(amount_initially_locked(&deposit), 30);
+
+        time = 1001 + month;
+        assert_eq!(deposit.vested(time).unwrap(), 10);
+        assert_eq!(deposit.lockup.period_current(time).unwrap(), 1);
+        assert_eq!(deposit.lockup.periods_total().unwrap(), 3);
+        deposit.resolve_vesting(time).unwrap();
+        assert_eq!(deposit.vested(time).unwrap(), 0);
+        assert_eq!(deposit.amount_withdrawable(time), 15);
+        assert_eq!(
+            deposit.lockup.seconds_left(time),
+            initial_deposit.lockup.seconds_left(time)
+        );
+        assert_eq!(deposit.lockup.period_current(time).unwrap(), 0);
+        assert_eq!(deposit.lockup.periods_total().unwrap(), 2);
+        assert_eq!(amount_initially_locked(&deposit), 20);
+
+        time = 1001 + 3 * month;
+        assert_eq!(deposit.vested(time).unwrap(), 20);
+        assert_eq!(deposit.lockup.period_current(time).unwrap(), 2);
+        assert_eq!(deposit.lockup.periods_total().unwrap(), 2);
+        deposit.resolve_vesting(time).unwrap();
+        assert_eq!(deposit.vested(time).unwrap(), 0);
+        assert_eq!(deposit.amount_withdrawable(time), 35);
+        assert_eq!(
+            deposit.lockup.seconds_left(time),
+            initial_deposit.lockup.seconds_left(time)
+        );
+        assert_eq!(deposit.lockup.period_current(time).unwrap(), 0);
+        assert_eq!(deposit.lockup.periods_total().unwrap(), 0);
+        assert_eq!(amount_initially_locked(&deposit), 0);
+
+        Ok(())
+    }
+}
