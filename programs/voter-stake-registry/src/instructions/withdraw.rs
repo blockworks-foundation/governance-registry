@@ -44,7 +44,7 @@ pub struct Withdraw<'info> {
 
     #[account(
         mut,
-        associated_token::authority = registrar,
+        associated_token::authority = voter,
         associated_token::mint = destination.mint,
     )]
     pub vault: Box<Account<'info, TokenAccount>>,
@@ -61,7 +61,7 @@ impl<'info> Withdraw<'info> {
         let accounts = token::Transfer {
             from: self.vault.to_account_info(),
             to: self.destination.to_account_info(),
-            authority: self.registrar.to_account_info(),
+            authority: self.voter.to_account_info(),
         };
         CpiContext::new(program, accounts)
     }
@@ -73,6 +73,16 @@ impl<'info> Withdraw<'info> {
 /// `deposit_entry_index`: The deposit entry to withdraw from.
 /// `amount` is in units of the native currency being withdrawn.
 pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) -> Result<()> {
+    {
+        // Transfer the tokens to withdraw.
+        let voter = &mut ctx.accounts.voter.load()?;
+        let voter_seeds = voter_seeds!(voter);
+        token::transfer(
+            ctx.accounts.transfer_ctx().with_signer(&[voter_seeds]),
+            amount,
+        )?;
+    }
+
     // Load the accounts.
     let registrar = &ctx.accounts.registrar.load()?;
     let voter = &mut ctx.accounts.voter.load_mut()?;
@@ -108,13 +118,6 @@ pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) ->
         .amount_deposited_native
         .checked_sub(amount)
         .unwrap();
-
-    // Transfer the tokens to withdraw.
-    let registrar_seeds = registrar_seeds!(registrar);
-    token::transfer(
-        ctx.accounts.transfer_ctx().with_signer(&[registrar_seeds]),
-        amount,
-    )?;
 
     msg!(
         "Withdrew amount {} at deposit index {} with lockup kind {:?} and {} seconds left",

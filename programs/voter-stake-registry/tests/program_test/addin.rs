@@ -24,7 +24,6 @@ pub struct RegistrarCookie {
 #[derive(Clone)]
 pub struct VotingMintConfigCookie {
     pub mint: MintCookie,
-    pub vault: Pubkey,
 }
 
 pub struct VoterCookie {
@@ -97,7 +96,7 @@ impl AddinCookie {
         &self,
         registrar: &RegistrarCookie,
         authority: &Keypair,
-        payer: &Keypair,
+        _payer: &Keypair,
         index: u16,
         mint: &MintCookie,
         digit_shift: i8,
@@ -107,10 +106,6 @@ impl AddinCookie {
         grant_authority: Option<Pubkey>,
     ) -> VotingMintConfigCookie {
         let deposit_mint = mint.pubkey.unwrap();
-        let vault = spl_associated_token_account::get_associated_token_address(
-            &registrar.address,
-            &deposit_mint,
-        );
 
         let data = anchor_lang::InstructionData::data(
             &voter_stake_registry::instruction::ConfigureVotingMint {
@@ -125,15 +120,9 @@ impl AddinCookie {
 
         let mut accounts = anchor_lang::ToAccountMetas::to_account_metas(
             &voter_stake_registry::accounts::ConfigureVotingMint {
-                vault,
                 mint: deposit_mint,
                 registrar: registrar.address,
                 realm_authority: authority.pubkey(),
-                payer: payer.pubkey(),
-                rent: solana_program::sysvar::rent::id(),
-                token_program: spl_token::id(),
-                associated_token_program: spl_associated_token_account::id(),
-                system_program: solana_sdk::system_program::id(),
             },
             None,
         );
@@ -149,18 +138,15 @@ impl AddinCookie {
         }];
 
         // clone the user secret
-        let signer1 = Keypair::from_base58_string(&payer.to_base58_string());
+        //let signer1 = Keypair::from_base58_string(&payer.to_base58_string());
         let signer2 = Keypair::from_base58_string(&authority.to_base58_string());
 
         self.solana
-            .process_transaction(&instructions, Some(&[&signer1, &signer2]))
+            .process_transaction(&instructions, Some(&[&signer2]))
             .await
             .unwrap();
 
-        VotingMintConfigCookie {
-            mint: mint.clone(),
-            vault,
-        }
+        VotingMintConfigCookie { mint: mint.clone() }
     }
 
     pub async fn create_voter(
@@ -241,6 +227,8 @@ impl AddinCookie {
         periods: u32,
         allow_clawback: bool,
     ) -> std::result::Result<(), TransportError> {
+        let vault = voter.vault_address(&voting_mint);
+
         let data = anchor_lang::InstructionData::data(
             &voter_stake_registry::instruction::CreateDepositEntry {
                 deposit_entry_index,
@@ -253,10 +241,16 @@ impl AddinCookie {
 
         let accounts = anchor_lang::ToAccountMetas::to_account_metas(
             &voter_stake_registry::accounts::CreateDepositEntry {
+                vault,
                 registrar: registrar.address,
                 voter: voter.address,
                 voter_authority: voter_authority.pubkey(),
+                payer: voter_authority.pubkey(),
                 deposit_mint: voting_mint.mint.pubkey.unwrap(),
+                system_program: solana_sdk::system_program::id(),
+                token_program: spl_token::id(),
+                associated_token_program: spl_associated_token_account::id(),
+                rent: solana_program::sysvar::rent::id(),
             },
             None,
         );
@@ -286,6 +280,8 @@ impl AddinCookie {
         deposit_entry_index: u8,
         amount: u64,
     ) -> std::result::Result<(), TransportError> {
+        let vault = voter.vault_address(&voting_mint);
+
         let data =
             anchor_lang::InstructionData::data(&voter_stake_registry::instruction::Deposit {
                 deposit_entry_index,
@@ -296,7 +292,7 @@ impl AddinCookie {
             &voter_stake_registry::accounts::Deposit {
                 registrar: registrar.address,
                 voter: voter.address,
-                vault: voting_mint.vault,
+                vault: vault,
                 deposit_token: token_address,
                 deposit_authority: authority.pubkey(),
                 token_program: spl_token::id(),
@@ -347,6 +343,13 @@ impl AddinCookie {
             ],
             &self.program_id,
         );
+        let voter_cookie = VoterCookie {
+            address: voter,
+            authority: voter_authority,
+            voter_weight_record,
+            token_owner_record: Pubkey::new_unique(), // don't have it
+        };
+        let vault = voter_cookie.vault_address(&voting_mint);
 
         let data = anchor_lang::InstructionData::data(&voter_stake_registry::instruction::Grant {
             voter_bump,
@@ -364,12 +367,14 @@ impl AddinCookie {
                 voter,
                 voter_authority,
                 voter_weight_record,
-                vault: voting_mint.vault,
+                vault,
                 deposit_token,
                 authority: authority.pubkey(),
                 payer: authority.pubkey(),
+                deposit_mint: voting_mint.mint.pubkey.unwrap(),
                 system_program: solana_sdk::system_program::id(),
                 token_program: spl_token::id(),
+                associated_token_program: spl_associated_token_account::id(),
                 rent: solana_program::sysvar::rent::id(),
             },
             None,
@@ -388,12 +393,7 @@ impl AddinCookie {
             .process_transaction(&instructions, Some(&[&signer1]))
             .await?;
 
-        Ok(VoterCookie {
-            address: voter,
-            authority: voter_authority,
-            voter_weight_record,
-            token_owner_record: Pubkey::new_unique(), // don't have it
-        })
+        Ok(voter_cookie)
     }
 
     #[allow(dead_code)]
@@ -406,6 +406,8 @@ impl AddinCookie {
         token_address: Pubkey,
         deposit_entry_index: u8,
     ) -> std::result::Result<(), TransportError> {
+        let vault = voter.vault_address(&voting_mint);
+
         let data =
             anchor_lang::InstructionData::data(&voter_stake_registry::instruction::Clawback {
                 deposit_entry_index,
@@ -416,7 +418,7 @@ impl AddinCookie {
                 registrar: registrar.address,
                 voter: voter.address,
                 token_owner_record: voter.token_owner_record,
-                vault: voting_mint.vault,
+                vault,
                 destination: token_address,
                 clawback_authority: clawback_authority.pubkey(),
                 token_program: spl_token::id(),
@@ -449,6 +451,8 @@ impl AddinCookie {
         deposit_entry_index: u8,
         amount: u64,
     ) -> std::result::Result<(), TransportError> {
+        let vault = voter.vault_address(&voting_mint);
+
         let data =
             anchor_lang::InstructionData::data(&voter_stake_registry::instruction::Withdraw {
                 deposit_entry_index,
@@ -461,7 +465,7 @@ impl AddinCookie {
                 voter: voter.address,
                 token_owner_record: voter.token_owner_record,
                 voter_weight_record: voter.voter_weight_record,
-                vault: voting_mint.vault,
+                vault,
                 destination: token_address,
                 voter_authority: authority.pubkey(),
                 token_program: spl_token::id(),
@@ -681,8 +685,9 @@ impl AddinCookie {
 
 impl VotingMintConfigCookie {
     #[allow(dead_code)]
-    pub async fn vault_balance(&self, solana: &SolanaCookie) -> u64 {
-        solana.get_account::<TokenAccount>(self.vault).await.amount
+    pub async fn vault_balance(&self, solana: &SolanaCookie, voter: &VoterCookie) -> u64 {
+        let vault = voter.vault_address(&self);
+        solana.get_account::<TokenAccount>(vault).await.amount
     }
 }
 
@@ -694,5 +699,12 @@ impl VoterCookie {
             .await
             .deposits[deposit_id as usize]
             .amount_deposited_native
+    }
+
+    pub fn vault_address(&self, mint: &VotingMintConfigCookie) -> Pubkey {
+        spl_associated_token_account::get_associated_token_address(
+            &self.address,
+            &mint.mint.pubkey.unwrap(),
+        )
     }
 }

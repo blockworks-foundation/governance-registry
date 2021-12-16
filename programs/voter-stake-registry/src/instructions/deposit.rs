@@ -18,7 +18,7 @@ pub struct Deposit<'info> {
 
     #[account(
         mut,
-        associated_token::authority = registrar,
+        associated_token::authority = voter,
         associated_token::mint = deposit_token.mint,
     )]
     pub vault: Box<Account<'info, TokenAccount>>,

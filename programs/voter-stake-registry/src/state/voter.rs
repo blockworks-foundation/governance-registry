@@ -57,3 +57,17 @@ impl Voter {
         Ok(record)
     }
 }
+
+#[macro_export]
+macro_rules! voter_seeds {
+    ( $voter:expr ) => {
+        &[
+            $voter.registrar.as_ref(),
+            b"voter".as_ref(),
+            $voter.voter_authority.as_ref(),
+            &[$voter.voter_bump],
+        ]
+    };
+}
+
+pub use voter_seeds;

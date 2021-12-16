@@ -1,8 +1,7 @@
 use crate::error::*;
 use crate::state::*;
 use anchor_lang::prelude::*;
-use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token::Mint;
 
 // Remaining accounts must be all the token mints that have registered
 // as voting mints, including the newly registered one.
@@ -12,24 +11,8 @@ pub struct ConfigureVotingMint<'info> {
     pub registrar: AccountLoader<'info, Registrar>,
     pub realm_authority: Signer<'info>,
 
-    /// Token account that all funds for this mint will be stored in
-    #[account(
-        init_if_needed,
-        payer = payer,
-        associated_token::authority = registrar,
-        associated_token::mint = mint,
-    )]
-    pub vault: Account<'info, TokenAccount>,
     /// Tokens of this mint will produce vote weight
     pub mint: Account<'info, Mint>,
-
-    #[account(mut)]
-    pub payer: Signer<'info>,
-
-    pub rent: Sysvar<'info, Rent>,
-    pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
-    pub system_program: Program<'info, System>,
 }
 
 /// Creates a new exchange rate for a given mint. This allows a voter to

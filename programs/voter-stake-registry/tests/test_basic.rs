@@ -82,8 +82,6 @@ async fn test_basic() -> Result<(), TransportError> {
         .solana
         .token_account_balance(reference_account)
         .await;
-    let vault_initial = mngo_voting_mint.vault_balance(&context.solana).await;
-    assert_eq!(vault_initial, 0);
     let balance_initial = voter.deposit_amount(&context.solana, 0).await;
     assert_eq!(balance_initial, 0);
 
@@ -118,7 +116,9 @@ async fn test_basic() -> Result<(), TransportError> {
         .token_account_balance(reference_account)
         .await;
     assert_eq!(reference_initial, reference_after_deposit + 10000);
-    let vault_after_deposit = mngo_voting_mint.vault_balance(&context.solana).await;
+    let vault_after_deposit = mngo_voting_mint
+        .vault_balance(&context.solana, &voter)
+        .await;
     assert_eq!(vault_after_deposit, 10000);
     let balance_after_deposit = voter.deposit_amount(&context.solana, 0).await;
     assert_eq!(balance_after_deposit, 10000);
@@ -155,7 +155,9 @@ async fn test_basic() -> Result<(), TransportError> {
         .token_account_balance(reference_account)
         .await;
     assert_eq!(reference_initial, reference_after_withdraw);
-    let vault_after_withdraw = mngo_voting_mint.vault_balance(&context.solana).await;
+    let vault_after_withdraw = mngo_voting_mint
+        .vault_balance(&context.solana, &voter)
+        .await;
     assert_eq!(vault_after_withdraw, 0);
     let balance_after_withdraw = voter.deposit_amount(&context.solana, 0).await;
     assert_eq!(balance_after_withdraw, 0);

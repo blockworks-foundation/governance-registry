@@ -6,3 +6,5 @@ target
 node_modules
 
 .idea
+
+programs/voter-stake-registry/src/lib-expanded.rs

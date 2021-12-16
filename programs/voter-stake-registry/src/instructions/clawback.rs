@@ -32,7 +32,7 @@ pub struct Clawback<'info> {
 
     #[account(
         mut,
-        associated_token::authority = registrar,
+        associated_token::authority = voter,
         associated_token::mint = destination.mint,
     )]
     pub vault: Box<Account<'info, TokenAccount>>,
@@ -49,7 +49,7 @@ impl<'info> Clawback<'info> {
         let accounts = token::Transfer {
             from: self.vault.to_account_info(),
             to: self.destination.to_account_info(),
-            authority: self.registrar.to_account_info(),
+            authority: self.voter.to_account_info(),
         };
         CpiContext::new(program, accounts)
     }
@@ -64,37 +64,43 @@ impl<'info> Clawback<'info> {
 /// The instruction will always reclaim all locked tokens, while leaving tokens
 /// that have already vested in place.
 pub fn clawback(ctx: Context<Clawback>, deposit_entry_index: u8) -> Result<()> {
-    // Load the accounts.
-    let registrar = &ctx.accounts.registrar.load()?;
-    let voter = &mut ctx.accounts.voter.load_mut()?;
-    let deposit_entry = voter.active_deposit_mut(deposit_entry_index)?;
-    require!(
-        deposit_entry.allow_clawback,
-        ErrorCode::ClawbackNotAllowedOnDeposit
-    );
+    let locked_amount = {
+        // Load the accounts.
+        let registrar = &ctx.accounts.registrar.load()?;
+        let voter = &mut ctx.accounts.voter.load_mut()?;
+        let deposit_entry = voter.active_deposit_mut(deposit_entry_index)?;
+        require!(
+            deposit_entry.allow_clawback,
+            ErrorCode::ClawbackNotAllowedOnDeposit
+        );
 
-    let curr_ts = registrar.clock_unix_timestamp();
-    let locked_amount = deposit_entry.amount_locked(curr_ts);
+        let curr_ts = registrar.clock_unix_timestamp();
+        let locked_amount = deposit_entry.amount_locked(curr_ts);
 
-    // Update deposit book keeping.
-    require!(
-        locked_amount <= deposit_entry.amount_deposited_native,
-        InternalProgramError
-    );
-    deposit_entry.amount_deposited_native -= locked_amount;
+        // Update deposit book keeping.
+        require!(
+            locked_amount <= deposit_entry.amount_deposited_native,
+            InternalProgramError
+        );
+        deposit_entry.amount_deposited_native -= locked_amount;
 
-    // Transfer the tokens to withdraw.
-    let registrar_seeds = registrar_seeds!(registrar);
-    token::transfer(
-        ctx.accounts.transfer_ctx().with_signer(&[registrar_seeds]),
-        locked_amount,
-    )?;
+        // Now that all locked funds are withdrawn, end the lockup
+        deposit_entry.amount_initially_locked_native = 0;
+        deposit_entry.lockup =
+            Lockup::new_from_periods(LockupKind::None, registrar.clock_unix_timestamp(), 0)?;
+        deposit_entry.allow_clawback = false;
+        locked_amount
+    };
 
-    // Now that all locked funds are withdrawn, end the lockup
-    deposit_entry.amount_initially_locked_native = 0;
-    deposit_entry.lockup =
-        Lockup::new_from_periods(LockupKind::None, registrar.clock_unix_timestamp(), 0)?;
-    deposit_entry.allow_clawback = false;
+    {
+        // Transfer the tokens to withdraw.
+        let voter = &mut ctx.accounts.voter.load()?;
+        let voter_seeds = voter_seeds!(voter);
+        token::transfer(
+            ctx.accounts.transfer_ctx().with_signer(&[voter_seeds]),
+            locked_amount,
+        )?;
+    }
 
     Ok(())
 }

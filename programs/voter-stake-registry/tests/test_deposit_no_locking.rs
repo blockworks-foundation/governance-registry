@@ -27,7 +27,7 @@ async fn balances(
     context.solana.advance_clock_by_slots(2).await;
 
     let token = context.solana.token_account_balance(address).await;
-    let vault = voting_mint.vault_balance(&context.solana).await;
+    let vault = voting_mint.vault_balance(&context.solana, &voter).await;
     let deposit = voter.deposit_amount(&context.solana, deposit_id).await;
     let vwr = context
         .addin
@@ -130,10 +130,10 @@ async fn test_deposit_no_locking() -> Result<(), TransportError> {
         )
     };
     // test deposit and withdraw
-
-    let initial = get_balances(0).await;
-    assert_eq!(initial.vault, 0);
-    assert_eq!(initial.deposit, 0);
+    let token = context
+        .solana
+        .token_account_balance(reference_account)
+        .await;
 
     addin
         .create_deposit_entry(
@@ -151,7 +151,7 @@ async fn test_deposit_no_locking() -> Result<(), TransportError> {
     deposit(0, 10000).await.unwrap();
 
     let after_deposit = get_balances(0).await;
-    assert_eq!(initial.token, after_deposit.token + after_deposit.vault);
+    assert_eq!(token, after_deposit.token + after_deposit.vault);
     assert_eq!(after_deposit.voter_weight, after_deposit.vault);
     assert_eq!(after_deposit.vault, 10000);
     assert_eq!(after_deposit.deposit, 10000);
@@ -160,7 +160,7 @@ async fn test_deposit_no_locking() -> Result<(), TransportError> {
     deposit(0, 5000).await.unwrap();
 
     let after_deposit2 = get_balances(0).await;
-    assert_eq!(initial.token, after_deposit2.token + after_deposit2.vault);
+    assert_eq!(token, after_deposit2.token + after_deposit2.vault);
     assert_eq!(after_deposit2.voter_weight, after_deposit2.vault);
     assert_eq!(after_deposit2.vault, 15000);
     assert_eq!(after_deposit2.deposit, 15000);
@@ -182,7 +182,7 @@ async fn test_deposit_no_locking() -> Result<(), TransportError> {
     deposit(1, 7000).await.unwrap();
 
     let after_deposit3 = get_balances(1).await;
-    assert_eq!(initial.token, after_deposit3.token + after_deposit3.vault);
+    assert_eq!(token, after_deposit3.token + after_deposit3.vault);
     assert_eq!(after_deposit3.voter_weight, after_deposit3.vault);
     assert_eq!(after_deposit3.vault, 22000);
     assert_eq!(after_deposit3.deposit, 7000);
@@ -190,7 +190,7 @@ async fn test_deposit_no_locking() -> Result<(), TransportError> {
     withdraw(10000).await.unwrap();
 
     let after_withdraw1 = get_balances(0).await;
-    assert_eq!(initial.token, after_withdraw1.token + after_withdraw1.vault);
+    assert_eq!(token, after_withdraw1.token + after_withdraw1.vault);
     assert_eq!(after_withdraw1.voter_weight, after_withdraw1.vault);
     assert_eq!(after_withdraw1.vault, 12000);
     assert_eq!(after_withdraw1.deposit, 5000);
@@ -200,7 +200,7 @@ async fn test_deposit_no_locking() -> Result<(), TransportError> {
     withdraw(5000).await.unwrap();
 
     let after_withdraw2 = get_balances(0).await;
-    assert_eq!(initial.token, after_withdraw2.token + after_withdraw2.vault);
+    assert_eq!(token, after_withdraw2.token + after_withdraw2.vault);
     assert_eq!(after_withdraw2.voter_weight, after_withdraw2.vault);
     assert_eq!(after_withdraw2.vault, 7000);
     assert_eq!(after_withdraw2.deposit, 0);
@@ -220,23 +220,22 @@ async fn test_deposit_no_locking() -> Result<(), TransportError> {
         .unwrap();
 
     let after_close = get_balances(0).await;
-    assert_eq!(initial.token, after_close.token + after_close.vault);
+    assert_eq!(token, after_close.token + after_close.vault);
     assert_eq!(after_close.voter_weight, after_close.vault);
     assert_eq!(after_close.vault, 7000);
     assert_eq!(after_close.deposit, 0);
 
     // check that the voter2 account is still at 0
-    let voter2_balances = balances(
-        &context,
-        &registrar,
-        reference_account,
-        &voter2,
-        &mngo_voting_mint,
-        0,
-    )
-    .await;
-    assert_eq!(voter2_balances.deposit, 0);
-    assert_eq!(voter2_balances.voter_weight, 0);
+    context.solana.advance_clock_by_slots(2).await;
+    let voter2_deposit = voter.deposit_amount(&context.solana, 0).await;
+    let voter2_voter_weight = context
+        .addin
+        .update_voter_weight_record(&registrar, &voter2)
+        .await
+        .unwrap()
+        .voter_weight;
+    assert_eq!(voter2_deposit, 0);
+    assert_eq!(voter2_voter_weight, 0);
 
     // now voter2 deposits
     addin
@@ -276,7 +275,7 @@ async fn test_deposit_no_locking() -> Result<(), TransportError> {
     .await;
     assert_eq!(voter2_balances.deposit, 1000);
     assert_eq!(voter2_balances.voter_weight, 1000);
-    assert_eq!(voter2_balances.vault, 8000);
+    assert_eq!(voter2_balances.vault, 1000);
 
     // when voter1 deposits again, they can reuse deposit index 0
     addin
@@ -295,9 +294,9 @@ async fn test_deposit_no_locking() -> Result<(), TransportError> {
     deposit(0, 3000).await.unwrap();
 
     let after_reuse = get_balances(0).await;
-    assert_eq!(initial.token, after_reuse.token + 7000 + 3000);
+    assert_eq!(token, after_reuse.token + 7000 + 3000);
     assert_eq!(after_reuse.voter_weight, 7000 + 3000);
-    assert_eq!(after_reuse.vault, 8000 + 3000);
+    assert_eq!(after_reuse.vault, 7000 + 3000);
     assert_eq!(after_reuse.deposit, 3000);
 
     Ok(())

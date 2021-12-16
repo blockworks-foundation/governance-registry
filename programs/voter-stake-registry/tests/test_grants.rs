@@ -104,7 +104,12 @@ async fn test_grants() -> Result<(), TransportError> {
         .await
         .unwrap();
 
-    assert_eq!(mngo_voting_mint.vault_balance(&context.solana).await, 36000);
+    assert_eq!(
+        mngo_voting_mint
+            .vault_balance(&context.solana, &voter)
+            .await,
+        12000
+    );
     assert_eq!(voter.deposit_amount(&context.solana, 0).await, 0);
     assert_eq!(voter.deposit_amount(&context.solana, 1).await, 12000);
     assert_eq!(voter.address, voter_grant.address);

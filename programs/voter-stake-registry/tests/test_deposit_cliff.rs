@@ -25,7 +25,7 @@ async fn balances(
     context.solana.advance_clock_by_slots(2).await;
 
     let token = context.solana.token_account_balance(address).await;
-    let vault = voting_mint.vault_balance(&context.solana).await;
+    let vault = voting_mint.vault_balance(&context.solana, &voter).await;
     let deposit = voter.deposit_amount(&context.solana, deposit_id).await;
     let vwr = context
         .addin
@@ -121,10 +121,10 @@ async fn test_deposit_cliff() -> Result<(), TransportError> {
     };
 
     // test deposit and withdraw
-
-    let initial = get_balances(0).await;
-    assert_eq!(initial.vault, 0);
-    assert_eq!(initial.deposit, 0);
+    let token = context
+        .solana
+        .token_account_balance(reference_account)
+        .await;
 
     addin
         .create_deposit_entry(
@@ -142,7 +142,7 @@ async fn test_deposit_cliff() -> Result<(), TransportError> {
     deposit(9000).await.unwrap();
 
     let after_deposit = get_balances(0).await;
-    assert_eq!(initial.token, after_deposit.token + after_deposit.vault);
+    assert_eq!(token, after_deposit.token + after_deposit.vault);
     assert_eq!(after_deposit.voter_weight, 2 * after_deposit.vault); // saturated locking bonus
     assert_eq!(after_deposit.vault, 9000);
     assert_eq!(after_deposit.deposit, 9000);
@@ -182,7 +182,7 @@ async fn test_deposit_cliff() -> Result<(), TransportError> {
     context.solana.advance_clock_by_slots(2).await;
 
     let after_cliff = get_balances(0).await;
-    assert_eq!(initial.token, after_cliff.token + after_cliff.vault);
+    assert_eq!(token, after_cliff.token + after_cliff.vault);
     assert_eq!(after_cliff.voter_weight, after_cliff.vault);
     assert_eq!(after_cliff.vault, 10000);
     assert_eq!(after_cliff.deposit, 10000);
@@ -192,7 +192,7 @@ async fn test_deposit_cliff() -> Result<(), TransportError> {
     withdraw(10000).await.unwrap();
 
     let after_withdraw = get_balances(0).await;
-    assert_eq!(initial.token, after_withdraw.token + after_withdraw.vault);
+    assert_eq!(token, after_withdraw.token + after_withdraw.vault);
     assert_eq!(after_withdraw.voter_weight, after_withdraw.vault);
     assert_eq!(after_withdraw.vault, 0);
     assert_eq!(after_withdraw.deposit, 0);

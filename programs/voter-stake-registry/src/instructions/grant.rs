@@ -1,7 +1,8 @@
 use crate::error::*;
 use crate::state::*;
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount};
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use spl_governance::addins::voter_weight::VoterWeightAccountType;
 use std::convert::TryFrom;
 use std::mem::size_of;
@@ -43,15 +44,17 @@ pub struct Grant<'info> {
     pub voter_weight_record: Account<'info, VoterWeightRecord>,
 
     #[account(
-        mut,
-        associated_token::authority = registrar,
-        associated_token::mint = deposit_token.mint,
+        init_if_needed,
+        associated_token::authority = voter,
+        associated_token::mint = deposit_mint,
+        payer = payer
     )]
     pub vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         constraint = deposit_token.owner == authority.key(),
+        constraint = deposit_token.mint == deposit_mint.key(),
     )]
     pub deposit_token: Box<Account<'info, TokenAccount>>,
 
@@ -60,8 +63,11 @@ pub struct Grant<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
+    pub deposit_mint: Box<Account<'info, Mint>>,
+
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
 }
 
