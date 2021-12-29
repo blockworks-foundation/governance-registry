@@ -1,4 +1,4 @@
-name: CI
+name: Lint and test
 
 on:
   push:
@@ -17,6 +17,7 @@ defaults:
 
 jobs:
   lint:
+    name: Install and run linters
     runs-on: ubuntu-latest
 
     steps:
@@ -38,6 +39,7 @@ jobs:
         run: cargo clippy -- --deny=warnings --allow=clippy::style --allow=clippy::complexity
 
   tests:
+    name: Install and run tests
     runs-on: ubuntu-latest
 
     steps:
@@ -52,7 +54,7 @@ jobs:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v1
-
+        
       # Install Solana
       - name: Cache Solana binaries
         uses: actions/cache@v2
@@ -68,5 +70,33 @@ jobs:
           echo "Generating keypair..."
           solana-keygen new -o "$HOME/.config/solana/id.json" --no-passphrase --silent
 
-      - name: Run tests
+      - name: Run bpf tests
         run: cargo test-bpf
+
+        # Create a cache for Soteria
+      - name: Cache Soteria
+        id: cache-soteria
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/soteria
+          key: ${{ runner.os }}-soteria
+          
+        # Install Soteria  
+      - name: Install Soteria
+        # If binaries are already cached, don't install again
+        if: steps.cache-soteria.outputs.cache-hit != 'true'
+        run: |
+          echo "Downloading Soteria..."
+          sh -c "$(curl -k https://supercompiler.xyz/install)"
+          export PATH=$PWD/soteria-linux-develop/bin/:$PATH
+          echo "$PWD/soteria-linux-develop/bin" >> $GITHUB_PATH
+          echo "Updating Rust..."
+          rustup update
+          echo "Soteria ready!"
+          
+      # Run Soteria tests against Cargo.toml for this repo (root folder)
+      - name: Run Soteria
+        run: |
+          echo "Running Soteria..."
+          soteria -analyzeAll .
+          echo "Soteria finished!"
