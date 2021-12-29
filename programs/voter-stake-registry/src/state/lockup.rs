@@ -14,6 +14,16 @@ pub const SECS_PER_DAY: u64 = 86_400;
 /// Seconds in one month.
 pub const SECS_PER_MONTH: u64 = 365 * SECS_PER_DAY / 12;
 
+/// Maximum acceptable number of lockup periods.
+///
+/// In the linear vesting voting power computation, a factor like
+/// `periods^2 * period_secs` is used. With the current setting
+/// that would be 36500^2 * SECS_PER_MONTH << 2^64.
+///
+/// This setting limits the maximum lockup duration for lockup methods
+/// with daily periods to 100 years.
+pub const MAX_LOCKUP_PERIODS: u32 = 365 * 100;
+
 #[zero_copy]
 pub struct Lockup {
     /// Start of the lockup.
@@ -50,6 +60,7 @@ impl Default for Lockup {
 impl Lockup {
     /// Create lockup for a given period
     pub fn new_from_periods(kind: LockupKind, start_ts: i64, periods: u32) -> Result<Self> {
+        require!(periods <= MAX_LOCKUP_PERIODS, InvalidLockupPeriod);
         Ok(Self {
             kind,
             start_ts,

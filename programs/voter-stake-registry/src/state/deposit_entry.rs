@@ -205,12 +205,12 @@ impl DepositEntry {
         //
 
         // In the example above, periods_total was 5.
-        let denominator = periods_total * lockup_saturation_secs;
+        let denominator = periods_total.checked_mul(lockup_saturation_secs).unwrap();
 
         let secs_to_closest_cliff = self
             .lockup
             .seconds_left(curr_ts)
-            .checked_sub(period_secs * (periods_left - 1))
+            .checked_sub(period_secs.checked_mul(periods_left - 1).unwrap())
             .unwrap();
 
         let lockup_saturation_periods =
@@ -231,15 +231,17 @@ impl DepositEntry {
         //   and the next has two full periods left
         //   so sums to 3 = 3 * 2 / 2
         // - if there's only one period left, the sum is 0
-        let sum_full_periods = q * (q - 1) / 2;
+        let sum_full_periods = q.checked_mul(q - 1).unwrap() / 2;
 
         // Total number of seconds left over all periods_left remaining vesting cliffs
-        let lockup_secs =
-            q * secs_to_closest_cliff + sum_full_periods * period_secs + r * lockup_saturation_secs;
+        let lockup_secs_fractional = q.checked_mul(secs_to_closest_cliff).unwrap() as u128;
+        let lockup_secs_full = sum_full_periods.checked_mul(period_secs).unwrap() as u128;
+        let lockup_secs_saturated = r.checked_mul(lockup_saturation_secs).unwrap() as u128;
+        let lockup_secs = lockup_secs_fractional + lockup_secs_full + lockup_secs_saturated;
 
         Ok(u64::try_from(
             (max_locked_vote_weight as u128)
-                .checked_mul(lockup_secs as u128)
+                .checked_mul(lockup_secs)
                 .unwrap()
                 .checked_div(denominator as u128)
                 .unwrap(),
