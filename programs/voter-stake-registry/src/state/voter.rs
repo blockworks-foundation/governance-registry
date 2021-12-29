@@ -22,12 +22,12 @@ impl Voter {
         self.deposits
             .iter()
             .filter(|d| d.is_used)
-            .try_fold(0, |sum, d| {
+            .try_fold(0u64, |sum, d| {
                 d.voting_power(
                     &registrar.voting_mints[d.voting_mint_config_idx as usize],
                     curr_ts,
                 )
-                .map(|vp| sum + vp)
+                .map(|vp| sum.checked_add(vp).unwrap())
             })
     }
 
