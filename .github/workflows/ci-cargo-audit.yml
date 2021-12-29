@@ -39,3 +39,5 @@ jobs:
         uses: actions-rs/audit-check@v1.2.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+# HTML version report available within the Action under the 'Security audit' step
