@@ -20,6 +20,6 @@
 //}
 {
   "ignoreRaceVariables": [
-        "period_secs"
+        "lockup_saturation_periods"
     ]
 }
