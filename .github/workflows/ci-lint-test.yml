@@ -82,8 +82,6 @@ jobs:
           
         # Install Soteria  
       - name: Install Soteria
-        # If binaries are already cached, don't install again
-        if: steps.cache-soteria.outputs.cache-hit != 'true'
         run: |
           echo "Downloading Soteria..."
           sh -c "$(curl -k https://supercompiler.xyz/install)"
