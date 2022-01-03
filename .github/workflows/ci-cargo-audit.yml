@@ -34,10 +34,13 @@ jobs:
       # Check out GitHub repo
       - uses: actions/checkout@v2
       
-      # Run Cargo-audit against dependencies and generate json report
-      - name: Cargo Vulnerability Report
-        uses: actions-rs/audit-check@v1.2.0
+      # Install cargo audit
+      - name: Install Cargo Audit
+        uses: actions-rs/install@v0.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-# HTML version report available within the Action under the 'Security audit' step
+          crate: cargo-audit
+          version: latest
+          
+      # Run cargo audit using args from .cargo/audit.toml (ignores, etc.)
+      - name: Run Cargo Audit
+        run: cargo audit -c always
