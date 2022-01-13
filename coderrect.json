@@ -1,6 +1,0 @@
-{
-  "ignoreRacesAtLocations": [
-        "programs/voter-stake-registry/src/state/deposit_entry.rs:240",
-        "programs/voter-stake-registry/src/state/deposit_entry.rs:329"
-    ]
-}
