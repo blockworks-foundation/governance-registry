@@ -29,7 +29,7 @@ anchor-spl = { version = "0.20.1", features = ["governance"]}
 # programs/voter-stake-registry/tests/fixtures/spl_governance.so is built from.
 spl-governance = { git = "https://github.com/solana-labs/solana-program-library", rev = "1a0155e34bf96489db2cd498be79ca417c87c09f", features = ["no-entrypoint"] }
 
-# pin solana to the same version anchor-lang 0.20.1 refers to
+# refer solana to the same version anchor-lang 0.20.1 refers to
 solana-program = "1.8.5"
 static_assertions = "1.1"
 
