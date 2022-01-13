@@ -1,6 +1,0 @@
-{
-  "ignoreRacesAtLocations": [
-        "deposit_entry.rs:240",
-        "deposit_entry.rs:329"
-    ]
-}
