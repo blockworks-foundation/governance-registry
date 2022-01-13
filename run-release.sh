@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-set -e -o pipefail
+set -euo pipefail
+
 anchor build
 cp ./target/idl/voter_stake_registry.json src/voter_stake_registry.json
 cp ./target/types/voter_stake_registry.ts src/voter_stake_registry.ts
