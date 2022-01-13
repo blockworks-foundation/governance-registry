@@ -1,4 +1,3 @@
-// .coderrect.json
 {
   "ignoreRacesAtLocations": [
         "deposit_entry.rs:240",
