@@ -2,4 +2,4 @@
 
 set -euo pipefail
 
-./run-format.sh && anchor test -- --features localnet
+cargo test-bpf
