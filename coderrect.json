@@ -1,6 +1,6 @@
 {
   "ignoreRacesAtLocations": [
-        "deposit_entry.rs:240",
-        "deposit_entry.rs:329"
+        "programs/voter-stake-registry/src/state/deposit_entry.rs:240",
+        "programs/voter-stake-registry/src/state/deposit_entry.rs:329"
     ]
 }
