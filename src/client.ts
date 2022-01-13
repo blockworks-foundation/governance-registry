@@ -1,7 +1,6 @@
 import { Program, Provider } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
-import { VoterStakeRegistry } from './voter_stake_registry';
-import IDL from './voter_stake_registry.json';
+import { VoterStakeRegistry, IDL } from './voter_stake_registry';
 
 export const VSR_ID = new PublicKey(
   '4Q6WW2ouZ6V3iaNm56MTd5n2tnTm4C5fiH8miFHnAFHo',
@@ -17,7 +16,7 @@ export class VsrClient {
     provider: Provider,
     devnet?: boolean,
   ): Promise<VsrClient> {
-    // fixme: when we push idl to mainnet we could use this
+    // alternatively we could fetch from chain
     // const idl = await Program.fetchIdl(VSR_ID, provider);
     const idl = IDL;
 

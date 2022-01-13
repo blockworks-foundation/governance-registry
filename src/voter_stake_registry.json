@@ -1,5 +1,5 @@
 {
-  "version": "0.1.3",
+  "version": "0.1.4",
   "name": "voter_stake_registry",
   "instructions": [
     {
@@ -1081,5 +1081,8 @@
       "name": "InvalidChangeToClawbackDepositEntry",
       "msg": ""
     }
-  ]
+  ],
+  "metadata": {
+    "address": "CfFQJmdSzG7DfGxfAsYDW81w3hBekL3MQBNpw9utE2mQ"
+  }
 }
