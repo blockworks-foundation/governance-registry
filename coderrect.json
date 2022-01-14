@@ -1,10 +1,28 @@
-// Additional configuration for Soteria
+// Use this file to configure ignores for Soteria.
+// Ignores can be created based on line lumber, variable name and function names.
+//
+// Example:
+//{
+//  "ignoreRacesAtLocations": [
+//        "fileNameA.rs:123",
+//        "fileNameB.rs:321"
+//    ],
+//  "ignoreRaceVariables": [
+//        "var"
+//    ],
+//  "ignoreRacesInFunctions": [
+//        "fn"
+//    ]
+//}
 {
 //  "ignoreRacesAtLocations": [
 //        "deposit_entry.rs:329"
 //    ],
   "ignoreRaceVariables": [
-        "lockup_saturation_periods"
+        "lockup_secs",
+        "lockup_secs_fractional",
+        "lockup_secs_full",
+        "lockup_secs_saturated"
     ],
   "ignoreRacesInFunctions": [
         "resolve_vesting"
