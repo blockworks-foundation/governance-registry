@@ -4,5 +4,14 @@
   ,
   "ignoreRacesAtLocations": [
         "deposit_entry.rs:329"
+    ],
+  "ignoreRaceVariables": [
+        "lockup_secs"
     ]
 }
+
+
+//"ignoreRacesInFunctions": [
+//        "assoc_expand",
+//        "logger_create"
+//    ]
