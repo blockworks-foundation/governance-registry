@@ -1,3 +1,6 @@
+"raceLimit": [
+        "30"
+]
 "ignoreRacesAtLocations": [
         "deposit_entry.rs:329"
 ]
