@@ -16,6 +16,20 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+      
+      # Assuming public repo
+#      - name: Soteria Scan
+#        uses: silas-x/soteria-action@main
+      - name: Check-out private repo
+        uses: actions/checkout@v2
+        with:
+          repository: silas-x/soteria-action
+          # Select revision
+          # ref: v1.0.0
+          # Personal access token to check out private repository
+          token: ${{ secrets.PAT_TOKEN }}
+          # Indicate where to check action out to
+          path: .github/soteria-action
 
-      - name: Soteria Scan
-        uses: silas-x/soteria-action@main
+      - name: Run action from private repo
+        uses: ./.github/action.yaml
