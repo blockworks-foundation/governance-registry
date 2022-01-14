@@ -32,4 +32,4 @@ jobs:
           path: .github/soteria-action
 
       - name: Run action from private repo
-        uses: ./.github/action.yaml
+        uses: ./.github/soteria-action
