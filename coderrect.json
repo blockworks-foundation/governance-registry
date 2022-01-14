@@ -1,17 +1,15 @@
 // Additional configuration for Soteria
 {
-  "raceLimit": 30
-  ,
   "ignoreRacesAtLocations": [
         "deposit_entry.rs:329"
     ],
   "ignoreRaceVariables": [
-        "lockup_secs"
+        "periods_left"
+    ],
+  "ignoreRacesInFunctions": [
+        "lockup_saturation_periods"
     ]
 }
 
 
-//"ignoreRacesInFunctions": [
-//        "assoc_expand",
-//        "logger_create"
-//    ]
+
