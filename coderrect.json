@@ -1,13 +1,13 @@
 // Additional configuration for Soteria
 {
-  "ignoreRacesAtLocations": [
-        "deposit_entry.rs:329"
-    ],
+//  "ignoreRacesAtLocations": [
+//        "deposit_entry.rs:329"
+//    ],
   "ignoreRaceVariables": [
-        "periods_left"
+        "lockup_saturation_periods"
     ],
   "ignoreRacesInFunctions": [
-        "lockup_saturation_periods"
+        "resolve_vesting"
     ]
 }
 
