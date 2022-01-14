@@ -1,5 +1,8 @@
-"raceLimit": 30
-,
-"ignoreRacesAtLocations": [
+// Additional configuration for Soteria
+{
+  "raceLimit": 30
+  ,
+  "ignoreRacesAtLocations": [
         "deposit_entry.rs:329"
-]
+    ]
+}
