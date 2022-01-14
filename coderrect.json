@@ -15,17 +15,12 @@
 //    ]
 //}
 {
-//  "ignoreRacesAtLocations": [
-//        "deposit_entry.rs:329"
-//    ],
-  "ignoreRaceVariables": [
-        "lockup_secs",
-        "lockup_secs_fractional",
-        "lockup_secs_full",
-        "lockup_secs_saturated"
+  "ignoreRacesAtLocations": [
+        "lockup.rs:384"
     ],
   "ignoreRacesInFunctions": [
-        "resolve_vesting"
+        "resolve_vesting",
+        "clock_unix_timestamp"
     ]
 }
 
