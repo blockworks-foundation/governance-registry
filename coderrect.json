@@ -1,4 +1,3 @@
 "ignoreRacesAtLocations": [
-        "items.c:1277",
-        "extstore.c:493"
-],
+        "deposit_entry.rs:329"
+]
