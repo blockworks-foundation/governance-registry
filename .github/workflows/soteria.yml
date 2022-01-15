@@ -33,5 +33,4 @@ jobs:
 
       - name: Run action from private repo
         uses: ./.github/soteria-action
-        with:
-            neverFail: true
+
