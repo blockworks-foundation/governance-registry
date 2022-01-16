@@ -13,6 +13,8 @@ pub struct ConfigureVotingMint<'info> {
 
     /// Tokens of this mint will produce vote weight
     pub mint: Account<'info, Mint>,
+    // This instruction expects that all voting mint addresses, including a
+    // newly registered one, are passed in ctx.remainingAccounts.
 }
 
 /// Creates a new exchange rate for a given mint. This allows a voter to
@@ -79,24 +81,23 @@ pub fn configure_voting_mint(
     require!(lockup_saturation_secs > 0, LockupSaturationMustBePositive);
     let registrar = &mut ctx.accounts.registrar.load_mut()?;
     let mint = ctx.accounts.mint.key();
-    let existing_idx = registrar.voting_mint_config_index(mint);
     let idx = idx as usize;
     require!(
         idx < registrar.voting_mints.len(),
         OutOfBoundsVotingMintConfigIndex
     );
-    let voting_mint_config = &mut registrar.voting_mints[idx];
 
-    // Either it's a new mint for an unused index, or it's the correct old index.
-    match existing_idx {
+    // Either it's reconfiguring an existing mint with the correct index,
+    // or configuring a new mint on an unused index.
+    match registrar.voting_mint_config_index(mint) {
         Ok(existing_idx) => require!(existing_idx == idx, VotingMintConfiguredWithDifferentIndex),
         Err(_) => require!(
-            !voting_mint_config.in_use(),
+            !registrar.voting_mints[idx].in_use(),
             VotingMintConfigIndexAlreadyInUse
         ),
     };
 
-    *voting_mint_config = VotingMintConfig {
+    registrar.voting_mints[idx] = VotingMintConfig {
         mint,
         digit_shift,
         deposit_scaled_factor,
