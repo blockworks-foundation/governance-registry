@@ -25,7 +25,7 @@ jobs:
         with:
           repository: silas-x/soteria-action
           # Select revision
-          # ref: v1.0.0
+          ref: v0.1
           # Personal access token to check out private repository
           token: ${{ secrets.PAT_TOKEN }}
           # Indicate where to check action out to
