@@ -1,28 +1,10 @@
 // Use this file to configure ignores for Soteria.
-// Ignores can be configured based on line number, variable name and function names.
-//
-// Example:
-//{
-//  "ignoreRacesAtLocations": [
-//        "fileNameA.rs:123",
-//        "fileNameB.rs:321"
-//    ],
-//  "ignoreRaceVariables": [
-//        "var"
-//    ],
-//  "ignoreRacesInFunctions": [
-//        "fn"
-//    ]
-//}
+// Ignores can be configured based on line number and functions (variable support to be added by tool)
 {
   "ignoreRacesAtLocations": [
-        "lockup.rs:384"
+        
     ],
   "ignoreRacesInFunctions": [
-        "resolve_vesting",
-        "clock_unix_timestamp"
+        
     ]
 }
-
-
-
