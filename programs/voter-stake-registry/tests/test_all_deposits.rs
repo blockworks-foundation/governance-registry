@@ -97,6 +97,7 @@ async fn test_all_deposits() -> Result<(), TransportError> {
         .unwrap();
     assert_eq!(vwr.voter_weight, 12000 * 32);
 
+    // make sure withdrawing works with all deposits filled
     addin
         .withdraw(
             &registrar,
@@ -109,6 +110,9 @@ async fn test_all_deposits() -> Result<(), TransportError> {
         )
         .await
         .unwrap();
+
+    // logging can take a lot of cu/mem
+    addin.log_voter_info(&registrar, &voter, 0).await;
 
     Ok(())
 }

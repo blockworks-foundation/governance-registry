@@ -649,6 +649,38 @@ impl AddinCookie {
     }
 
     #[allow(dead_code)]
+    pub async fn log_voter_info(
+        &self,
+        registrar: &RegistrarCookie,
+        voter: &VoterCookie,
+        deposit_entry_begin: u8,
+    ) {
+        let data =
+            anchor_lang::InstructionData::data(&voter_stake_registry::instruction::LogVoterInfo {
+                deposit_entry_begin,
+            });
+
+        let accounts = anchor_lang::ToAccountMetas::to_account_metas(
+            &voter_stake_registry::accounts::LogVoterInfo {
+                registrar: registrar.address,
+                voter: voter.address,
+            },
+            None,
+        );
+
+        let instructions = vec![Instruction {
+            program_id: self.program_id,
+            accounts,
+            data,
+        }];
+
+        self.solana
+            .process_transaction(&instructions, None)
+            .await
+            .unwrap();
+    }
+
+    #[allow(dead_code)]
     pub async fn set_time_offset(
         &self,
         registrar: &RegistrarCookie,

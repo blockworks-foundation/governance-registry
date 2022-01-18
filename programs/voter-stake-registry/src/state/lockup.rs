@@ -185,6 +185,16 @@ impl LockupKind {
             LockupKind::Constant => 3,
         }
     }
+
+    pub fn is_vesting(&self) -> bool {
+        match self {
+            LockupKind::None => false,
+            LockupKind::Daily => true,
+            LockupKind::Monthly => true,
+            LockupKind::Cliff => false,
+            LockupKind::Constant => false,
+        }
+    }
 }
 
 #[cfg(test)]

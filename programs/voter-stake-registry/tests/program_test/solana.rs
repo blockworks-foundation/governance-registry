@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::sync::{Arc, RwLock};
 
 use anchor_lang::AccountDeserialize;
 use anchor_spl::token::TokenAccount;
@@ -17,6 +18,7 @@ use spl_token::*;
 pub struct SolanaCookie {
     pub context: RefCell<ProgramTestContext>,
     pub rent: Rent,
+    pub program_log: Arc<RwLock<Vec<String>>>,
 }
 
 impl SolanaCookie {
@@ -26,6 +28,8 @@ impl SolanaCookie {
         instructions: &[Instruction],
         signers: Option<&[&Keypair]>,
     ) -> Result<(), TransportError> {
+        self.program_log.write().unwrap().clear();
+
         let mut context = self.context.borrow_mut();
 
         let mut transaction =
@@ -120,5 +124,10 @@ impl SolanaCookie {
     #[allow(dead_code)]
     pub async fn token_account_balance(&self, address: Pubkey) -> u64 {
         self.get_account::<TokenAccount>(address).await.amount
+    }
+
+    #[allow(dead_code)]
+    pub fn program_log(&self) -> Vec<String> {
+        self.program_log.read().unwrap().clone()
     }
 }

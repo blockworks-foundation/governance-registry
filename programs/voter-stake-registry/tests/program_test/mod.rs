@@ -1,5 +1,6 @@
+use log::*;
 use std::cell::RefCell;
-use std::{str::FromStr, sync::Arc};
+use std::{str::FromStr, sync::Arc, sync::RwLock};
 
 use solana_program::{program_option::COption, program_pack::Pack};
 use solana_program_test::*;
@@ -45,6 +46,29 @@ impl AddPacked for ProgramTest {
     }
 }
 
+struct LoggerWrapper {
+    inner: env_logger::Logger,
+    program_log: Arc<RwLock<Vec<String>>>,
+}
+
+impl Log for LoggerWrapper {
+    fn enabled(&self, metadata: &log::Metadata) -> bool {
+        self.inner.enabled(metadata)
+    }
+
+    fn log(&self, record: &log::Record) {
+        if record.target() == "solana_runtime::message_processor" {
+            let msg = record.args().to_string();
+            if let Some(data) = msg.strip_prefix("Program log: ") {
+                self.program_log.write().unwrap().push(data.into());
+            }
+        }
+        self.inner.log(record);
+    }
+
+    fn flush(&self) {}
+}
+
 pub struct TestContext {
     pub solana: Arc<SolanaCookie>,
     pub governance: GovernanceCookie,
@@ -56,6 +80,21 @@ pub struct TestContext {
 
 impl TestContext {
     pub async fn new() -> Self {
+        // We need to intercept logs to capture program log output
+        let log_filter = "solana_rbpf=trace,\
+                    solana_runtime::message_processor=debug,\
+                    solana_runtime::system_instruction_processor=trace,\
+                    solana_program_test=info";
+        let env_logger =
+            env_logger::Builder::from_env(env_logger::Env::new().default_filter_or(log_filter))
+                .format_timestamp_nanos()
+                .build();
+        let program_log_capture = Arc::new(RwLock::new(vec![]));
+        let _ = log::set_boxed_logger(Box::new(LoggerWrapper {
+            inner: env_logger,
+            program_log: program_log_capture.clone(),
+        }));
+
         let addin_program_id = voter_stake_registry::id();
 
         let mut test = ProgramTest::new(
@@ -64,7 +103,7 @@ impl TestContext {
             processor!(voter_stake_registry::entry),
         );
         // intentionally set to half the limit, to catch potential problems early
-        test.set_bpf_compute_max_units(100000);
+        test.set_bpf_compute_max_units(110000);
 
         let governance_program_id =
             Pubkey::from_str(&"GovernanceProgramTest1111111111111111111111").unwrap();
@@ -73,16 +112,6 @@ impl TestContext {
             governance_program_id,
             processor!(spl_governance::processor::process_instruction),
         );
-
-        // Supress some of the logs
-        solana_logger::setup_with_default(
-            "solana_rbpf=trace,\
-                solana_runtime::message_processor=debug,\
-                solana_runtime::system_instruction_processor=trace,\
-                solana_program_test=info",
-        );
-        // Disable all logs except error
-        // solana_logger::setup_with("error");
 
         // Setup the environment
 
@@ -177,6 +206,7 @@ impl TestContext {
         let solana = Arc::new(SolanaCookie {
             context: RefCell::new(context),
             rent,
+            program_log: program_log_capture.clone(),
         });
 
         TestContext {

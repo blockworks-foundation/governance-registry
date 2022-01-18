@@ -4,6 +4,7 @@ use instructions::*;
 use state::*;
 
 mod error;
+pub mod events;
 mod instructions;
 pub mod state;
 
@@ -185,6 +186,10 @@ pub mod voter_stake_registry {
 
     pub fn close_voter(ctx: Context<CloseVoter>) -> Result<()> {
         instructions::close_voter(ctx)
+    }
+
+    pub fn log_voter_info(ctx: Context<LogVoterInfo>, deposit_entry_begin: u8) -> Result<()> {
+        instructions::log_voter_info(ctx, deposit_entry_begin)
     }
 
     pub fn set_time_offset(ctx: Context<SetTimeOffset>, time_offset: i64) -> Result<()> {
