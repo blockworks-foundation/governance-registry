@@ -1,5 +1,5 @@
 export type VoterStakeRegistry = {
-  "version": "0.1.4",
+  "version": "0.1.5",
   "name": "voter_stake_registry",
   "instructions": [
     {
@@ -642,6 +642,27 @@ export type VoterStakeRegistry = {
       "args": []
     },
     {
+      "name": "logVoterInfo",
+      "accounts": [
+        {
+          "name": "registrar",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "voter",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "depositEntryBegin",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "setTimeOffset",
       "accounts": [
         {
@@ -815,6 +836,48 @@ export type VoterStakeRegistry = {
       }
     },
     {
+      "name": "VestingInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "rate",
+            "type": "u64"
+          },
+          {
+            "name": "nextTimestamp",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LockingInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "endTimestamp",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "vesting",
+            "type": {
+              "option": {
+                "defined": "VestingInfo"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "Lockup",
       "type": {
         "kind": "struct",
@@ -908,6 +971,62 @@ export type VoterStakeRegistry = {
           }
         ]
       }
+    }
+  ],
+  "events": [
+    {
+      "name": "VoterInfo",
+      "fields": [
+        {
+          "name": "votingPower",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "votingPowerDepositOnly",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "DepositEntryInfo",
+      "fields": [
+        {
+          "name": "depositEntryIndex",
+          "type": "u8",
+          "index": false
+        },
+        {
+          "name": "votingMintConfigIndex",
+          "type": "u8",
+          "index": false
+        },
+        {
+          "name": "withdrawable",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "votingPower",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "votingPowerDepositOnly",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "locking",
+          "type": {
+            "option": {
+              "defined": "LockingInfo"
+            }
+          },
+          "index": false
+        }
+      ]
     }
   ],
   "errors": [
@@ -1085,7 +1204,7 @@ export type VoterStakeRegistry = {
 };
 
 export const IDL: VoterStakeRegistry = {
-  "version": "0.1.4",
+  "version": "0.1.5",
   "name": "voter_stake_registry",
   "instructions": [
     {
@@ -1728,6 +1847,27 @@ export const IDL: VoterStakeRegistry = {
       "args": []
     },
     {
+      "name": "logVoterInfo",
+      "accounts": [
+        {
+          "name": "registrar",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "voter",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "depositEntryBegin",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "setTimeOffset",
       "accounts": [
         {
@@ -1901,6 +2041,48 @@ export const IDL: VoterStakeRegistry = {
       }
     },
     {
+      "name": "VestingInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "rate",
+            "type": "u64"
+          },
+          {
+            "name": "nextTimestamp",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LockingInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "endTimestamp",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "vesting",
+            "type": {
+              "option": {
+                "defined": "VestingInfo"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "Lockup",
       "type": {
         "kind": "struct",
@@ -1994,6 +2176,62 @@ export const IDL: VoterStakeRegistry = {
           }
         ]
       }
+    }
+  ],
+  "events": [
+    {
+      "name": "VoterInfo",
+      "fields": [
+        {
+          "name": "votingPower",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "votingPowerDepositOnly",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "DepositEntryInfo",
+      "fields": [
+        {
+          "name": "depositEntryIndex",
+          "type": "u8",
+          "index": false
+        },
+        {
+          "name": "votingMintConfigIndex",
+          "type": "u8",
+          "index": false
+        },
+        {
+          "name": "withdrawable",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "votingPower",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "votingPowerDepositOnly",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "locking",
+          "type": {
+            "option": {
+              "defined": "LockingInfo"
+            }
+          },
+          "index": false
+        }
+      ]
     }
   ],
   "errors": [
