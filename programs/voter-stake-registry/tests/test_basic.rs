@@ -4,6 +4,7 @@ use solana_sdk::{signature::Keypair, signer::Signer, transport::TransportError};
 use std::borrow::BorrowMut;
 
 use program_test::*;
+use voter_stake_registry::state::Voter;
 
 mod program_test;
 
@@ -182,7 +183,13 @@ async fn test_basic() -> Result<(), TransportError> {
         .banks_client
         .get_balance(voter_authority.pubkey())
         .await?;
-    assert!(lamports_after > lamports_before);
+    let token_rent = context.solana.rent.minimum_balance(TokenAccount::LEN);
+    let voter_rent = context
+        .solana
+        .rent
+        .minimum_balance(std::mem::size_of::<Voter>());
+    let tolerance = 60_000;
+    assert!(lamports_after > lamports_before + voter_rent + token_rent - tolerance);
 
     Ok(())
 }
