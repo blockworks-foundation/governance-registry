@@ -336,6 +336,8 @@ impl DepositEntry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::LockupKind::Daily;
+    use std::str::FromStr;
 
     #[test]
     pub fn resolve_vesting() -> Result<()> {
@@ -398,6 +400,49 @@ mod tests {
         assert_eq!(deposit.lockup.periods_total().unwrap(), 0);
         assert_eq!(amount_initially_locked(&deposit), 0);
 
+        Ok(())
+    }
+
+    #[test]
+    pub fn adrian_test() -> Result<()> {
+        let mut deposit = DepositEntry {
+            amount_deposited_native: 10000,
+            amount_initially_locked_native: 10000,
+            lockup: Lockup {
+                start_ts: 1642682051,
+                end_ts: 1642682137,
+                kind: Daily,
+                padding: [0; 15],
+            },
+            is_used: true,
+            allow_clawback: false,
+            voting_mint_config_idx: 0,
+            padding: [0; 13],
+        };
+        let voting_mint_config = VotingMintConfig {
+            mint: Pubkey::from_str("6dqK6igiavXcUeajbmUBA8R3ZrzoRd4SbH1LLPZMe34f").unwrap(),
+            grant_authority: Pubkey::from_str("56CRgykvwrWcCyKY1L5UCc3NgCKz57ZE7AMJcP5tccCu")
+                .unwrap(),
+            deposit_scaled_factor: 1000000000,
+            lockup_scaled_factor: 1000000000,
+            lockup_saturation_secs: 157680000,
+            digit_shift: 0,
+            padding: [0; 31],
+        };
+
+        let deposit_vote_weight =
+            voting_mint_config.deposit_vote_weight(deposit.amount_deposited_native)?;
+        println!("deposit_vote_weight {:?}", deposit_vote_weight);
+        let max_locked_vote_weight =
+            voting_mint_config.max_lockup_vote_weight(deposit.amount_initially_locked_native)?;
+        println!("max_locked_vote_weight {:?}", max_locked_vote_weight);
+
+        let withdrawable = deposit.amount_withdrawable(16426933720);
+        println!("withdrawable {:?}", withdrawable);
+        let voting_power = deposit
+            .voting_power(&voting_mint_config, 16426933720 - 100000000)
+            .unwrap();
+        println!("voting_power {:?}", voting_power);
         Ok(())
     }
 }

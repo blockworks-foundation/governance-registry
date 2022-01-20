@@ -33,10 +33,10 @@ pub struct Lockup {
     ///
     /// Similarly vote power computations don't care about start_ts and always
     /// assume the full interval from now to end_ts.
-    start_ts: i64,
+    pub(crate) start_ts: i64,
 
     /// End of the lockup.
-    end_ts: i64,
+    pub(crate) end_ts: i64,
 
     /// Type of lockup.
     pub kind: LockupKind,

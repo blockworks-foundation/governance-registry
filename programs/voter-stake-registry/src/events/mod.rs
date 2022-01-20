@@ -1,12 +1,13 @@
 use anchor_lang::prelude::*;
 
 #[event]
+#[derive(Debug)]
 pub struct VoterInfo {
     pub voting_power: u64,
     pub voting_power_deposit_only: u64,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug)]
 pub struct VestingInfo {
     /// Amount of tokens vested each period
     pub rate: u64,
@@ -14,7 +15,7 @@ pub struct VestingInfo {
     pub next_timestamp: u64,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug)]
 pub struct LockingInfo {
     /// Amount of locked tokens
     pub amount: u64,
@@ -25,6 +26,7 @@ pub struct LockingInfo {
 }
 
 #[event]
+#[derive(Debug)]
 pub struct DepositEntryInfo {
     pub deposit_entry_index: u8,
     pub voting_mint_config_index: u8,

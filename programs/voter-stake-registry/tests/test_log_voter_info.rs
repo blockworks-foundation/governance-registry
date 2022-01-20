@@ -16,6 +16,43 @@ fn deserialize_event<T: anchor_lang::Event>(event: &str) -> Option<T> {
 
 #[allow(unaligned_references)]
 #[tokio::test]
+async fn test_print_event() -> Result<(), TransportError> {
+    println!(
+        "{:?}",
+        deserialize_event::<voter_stake_registry::events::DepositEntryInfo>(
+            "LP4gbyknBZQAABhzAQAAAAAAGHMBAAAAAAAYcwEAAAAAAAEAAAAAAAAAAAGK6hx3fgEAAAA="
+        )
+        .ok_or(())
+    );
+    println!(
+        "{:?}",
+        deserialize_event::<voter_stake_registry::events::DepositEntryInfo>(
+            "LP4gbyknBZQBAAAAAAAAAAAAoIYBAAAAAABQwwAAAAAAAAFQwwAAAAAAAAFSl5iAfgEAAAA="
+        )
+        .ok_or(())
+    );
+    println!(
+        "{:?}",
+        deserialize_event::<voter_stake_registry::events::DepositEntryInfo>(
+            "LP4gbyknBZQCAAAAAAAAAAAARjI0BgAAAAAQJwAAAAAAAAEQJwAAAAAAAAGLPXx3fgEAAAEQJwAAAAAAAIs9fHd+AQAA"
+        )
+        .ok_or(())
+    );
+    println!(
+        "{:?}",
+        deserialize_event::<voter_stake_registry::events::DepositEntryInfo>(
+            "LP4gbyknBZQDAAAAAAAAAAAACFIAAAAAAACYOgAAAAAAAAGYOgAAAAAAAAAA"
+        )
+        .ok_or(())
+    );
+
+    assert_eq!(1, 2);
+
+    Ok(())
+}
+
+#[allow(unaligned_references)]
+#[tokio::test]
 async fn test_log_voter_info() -> Result<(), TransportError> {
     let context = TestContext::new().await;
     let addin = &context.addin;
