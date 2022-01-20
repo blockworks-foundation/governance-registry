@@ -26,7 +26,8 @@ pub struct CloseVoter<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-/// Closes the voter account, allowing one to retrieve rent exemption SOL.
+/// Closes the voter account (Optionally, also token vaults, as part of remaining_accounts),
+/// allowing one to retrieve rent exemption SOL.
 /// Only accounts with no remaining deposits can be closed.
 pub fn close_voter<'key, 'accounts, 'remaining, 'info>(
     ctx: Context<'key, 'accounts, 'remaining, 'info, CloseVoter<'info>>,
@@ -41,6 +42,7 @@ pub fn close_voter<'key, 'accounts, 'remaining, 'info>(
     for account in &mut ctx.remaining_accounts.iter() {
         let token = Account::<TokenAccount>::try_from(&account.clone()).unwrap();
         require!(token.owner == ctx.accounts.voter.key(), InvalidAuthority);
+        require!(token.amount == 0, VaultTokenNonZero);
 
         let cpi_accounts = CloseAccount {
             account: account.to_account_info(),

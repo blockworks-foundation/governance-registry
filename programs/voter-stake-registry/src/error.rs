@@ -110,4 +110,7 @@ pub enum ErrorCode {
     // 6035 / 0x1793
     #[msg("")]
     DepositStartTooFarInFuture,
+    // 6036 / 0x1794
+    #[msg("")]
+    VaultTokenNonZero,
 }
