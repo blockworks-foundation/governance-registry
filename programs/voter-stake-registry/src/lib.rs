@@ -184,7 +184,9 @@ pub mod voter_stake_registry {
         instructions::update_max_vote_weight(ctx)
     }
 
-    pub fn close_voter(ctx: Context<CloseVoter>) -> Result<()> {
+    pub fn close_voter<'key, 'accounts, 'remaining, 'info>(
+        ctx: Context<'key, 'accounts, 'remaining, 'info, CloseVoter<'info>>,
+    ) -> Result<()> {
         instructions::close_voter(ctx)
     }
 

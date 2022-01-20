@@ -488,6 +488,45 @@ impl AddinCookie {
             .await
     }
 
+    #[allow(dead_code)]
+    pub async fn close_voter(
+        &self,
+        registrar: &RegistrarCookie,
+        voter: &VoterCookie,
+        voting_mint: &VotingMintConfigCookie,
+        voter_authority: &Keypair,
+    ) -> std::result::Result<(), TransportError> {
+        let vault = voter.vault_address(&voting_mint);
+
+        let data =
+            anchor_lang::InstructionData::data(&voter_stake_registry::instruction::CloseVoter {});
+
+        let mut accounts = anchor_lang::ToAccountMetas::to_account_metas(
+            &voter_stake_registry::accounts::CloseVoter {
+                registrar: registrar.address,
+                voter: voter.address,
+                voter_authority: voter_authority.pubkey(),
+                sol_destination: voter_authority.pubkey(),
+                token_program: spl_token::id(),
+            },
+            None,
+        );
+        accounts.push(anchor_lang::prelude::AccountMeta::new(vault, false));
+
+        let instructions = vec![Instruction {
+            program_id: self.program_id,
+            accounts,
+            data,
+        }];
+
+        // clone the secrets
+        let signer = Keypair::from_base58_string(&voter_authority.to_base58_string());
+
+        self.solana
+            .process_transaction(&instructions, Some(&[&signer]))
+            .await
+    }
+
     pub fn update_voter_weight_record_instruction(
         &self,
         registrar: &RegistrarCookie,
