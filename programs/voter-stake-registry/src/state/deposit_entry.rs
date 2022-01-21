@@ -232,7 +232,8 @@ impl DepositEntry {
             .saturating_sub(secs_to_closest_cliff)
             .checked_add(period_secs)
             .unwrap())
-            / period_secs;
+        .checked_div(period_secs)
+        .unwrap();
         let q = min(lockup_saturation_periods, periods_left);
         let r = periods_left.saturating_sub(q);
 

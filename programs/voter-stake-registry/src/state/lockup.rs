@@ -117,7 +117,8 @@ impl Lockup {
             .seconds_left(curr_ts)
             .checked_add(period_secs.saturating_sub(1))
             .unwrap()
-            / period_secs)
+            .checked_div(period_secs)
+            .unwrap())
     }
 
     /// Returns the current period in the vesting schedule.
@@ -138,7 +139,7 @@ impl Lockup {
         let lockup_secs = self.seconds_left(self.start_ts);
         require!(lockup_secs % period_secs == 0, InvalidLockupPeriod);
 
-        Ok(lockup_secs / period_secs)
+        Ok(lockup_secs.checked_div(period_secs).unwrap())
     }
 
     /// Remove the vesting periods that are now in the past.
