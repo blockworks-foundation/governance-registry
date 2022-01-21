@@ -113,7 +113,11 @@ impl Lockup {
         if curr_ts < self.start_ts {
             return self.periods_total();
         }
-        Ok((self.seconds_left(curr_ts) + period_secs - 1) / period_secs)
+        Ok(self
+            .seconds_left(curr_ts)
+            .checked_add(period_secs.saturating_sub(1))
+            .unwrap()
+            / period_secs)
     }
 
     /// Returns the current period in the vesting schedule.

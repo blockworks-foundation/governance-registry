@@ -342,7 +342,10 @@ impl DepositEntry {
             vested_amount <= self.amount_initially_locked_native,
             InternalProgramError
         );
-        self.amount_initially_locked_native -= vested_amount;
+        self.amount_initially_locked_native = self
+            .amount_initially_locked_native
+            .checked_sub(vested_amount)
+            .unwrap();
         self.lockup.remove_past_periods(curr_ts)?;
         require!(self.vested(curr_ts)? == 0, InternalProgramError);
         Ok(())

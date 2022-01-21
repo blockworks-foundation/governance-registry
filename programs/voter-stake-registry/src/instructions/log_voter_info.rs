@@ -54,7 +54,12 @@ pub fn log_voter_info(ctx: Context<LogVoterInfo>, deposit_entry_begin: u8) -> Re
             end_timestamp: (lockup.kind != LockupKind::Constant).then(|| end_ts),
             vesting: lockup.kind.is_vesting().then(|| VestingInfo {
                 rate: deposit.amount_initially_locked_native / periods_total,
-                next_timestamp: end_ts - (periods_left - 1) * lockup.kind.period_secs(),
+                next_timestamp: end_ts.saturating_sub(
+                    periods_left
+                        .saturating_sub(1)
+                        .checked_mul(lockup.kind.period_secs())
+                        .unwrap(),
+                ),
             }),
         });
 
