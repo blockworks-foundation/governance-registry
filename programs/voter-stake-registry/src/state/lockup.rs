@@ -24,6 +24,8 @@ pub const SECS_PER_MONTH: u64 = 365 * SECS_PER_DAY / 12;
 /// with daily periods to 100 years.
 pub const MAX_LOCKUP_PERIODS: u32 = 365 * 100;
 
+pub const MAX_LOCKUP_IN_FUTURE_SECS: i64 = 100 * 365 * 24 * 60 * 60;
+
 #[zero_copy]
 pub struct Lockup {
     /// Start of the lockup.
@@ -59,7 +61,16 @@ impl Default for Lockup {
 
 impl Lockup {
     /// Create lockup for a given period
-    pub fn new_from_periods(kind: LockupKind, start_ts: i64, periods: u32) -> Result<Self> {
+    pub fn new_from_periods(
+        kind: LockupKind,
+        curr_ts: i64,
+        start_ts: i64,
+        periods: u32,
+    ) -> Result<Self> {
+        require!(
+            start_ts < curr_ts + MAX_LOCKUP_IN_FUTURE_SECS,
+            DepositStartTooFarInFuture
+        );
         require!(periods <= MAX_LOCKUP_PERIODS, InvalidLockupPeriod);
         Ok(Self {
             kind,
@@ -208,7 +219,7 @@ mod tests {
 
     #[test]
     pub fn period_computations() -> Result<()> {
-        let lockup = Lockup::new_from_periods(LockupKind::Daily, 1000, 3)?;
+        let lockup = Lockup::new_from_periods(LockupKind::Daily, 1000, 1000, 3)?;
         let day = SECS_PER_DAY as i64;
         assert_eq!(lockup.periods_total()?, 3);
         assert_eq!(lockup.period_current(0)?, 0);

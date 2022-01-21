@@ -93,12 +93,17 @@ impl DepositEntry {
             voting_mint_config.deposit_vote_weight(self.amount_deposited_native)?;
         let max_locked_vote_weight =
             voting_mint_config.max_lockup_vote_weight(self.amount_initially_locked_native)?;
+        let locked_vote_weight = self.voting_power_locked(
+            curr_ts,
+            max_locked_vote_weight,
+            voting_mint_config.lockup_saturation_secs,
+        )?;
+        require!(
+            locked_vote_weight <= max_locked_vote_weight,
+            InternalErrorBadLockupVoteWeight
+        );
         deposit_vote_weight
-            .checked_add(self.voting_power_locked(
-                curr_ts,
-                max_locked_vote_weight,
-                voting_mint_config.lockup_saturation_secs,
-            )?)
+            .checked_add(locked_vote_weight)
             .ok_or(Error::ErrorCode(ErrorCode::VoterWeightOverflow))
     }
 
@@ -186,10 +191,12 @@ impl DepositEntry {
         //        secs_to_closest_cliff + (p-1) * period_secs,
         //        lockup_saturation_secs)
         //
-        // We can split the sum into the part before saturation and the part after:
-        // Let q be the largest integer <= periods_left where
+        // If secs_to_closest_cliff < lockup_saturation_secs, we can split the sum
+        //    \sum_p secs_left_for_cliff_p
+        // into the part before saturation and the part after:
+        // Let q be the largest integer 1 <= q <= periods_left where
         //        secs_to_closest_cliff + (q-1) * period_secs < lockup_saturation_secs
-        //    =>  q < (lockup_saturation_secs + period_secs - secs_to_closest_cliff) / period_secs
+        //    =>  q = (lockup_saturation_secs - secs_to_closest_cliff + period_secs) / period_secs
         // and r be the integer where q + r = periods_left, then:
         //    lockup_secs := \sum_p secs_left_for_cliff_p
         //                 = \sum_{p<=q} secs_left_for_cliff_p
@@ -204,23 +211,30 @@ impl DepositEntry {
         //                      = q * (q - 1) / 2
         //
 
-        // In the example above, periods_total was 5.
-        let denominator = periods_total.checked_mul(lockup_saturation_secs).unwrap();
-
         let secs_to_closest_cliff = self
             .lockup
             .seconds_left(curr_ts)
-            .checked_sub(period_secs.checked_mul(periods_left - 1).unwrap())
+            .checked_sub(
+                period_secs
+                    .checked_mul(periods_left.saturating_sub(1))
+                    .unwrap(),
+            )
             .unwrap();
 
-        let lockup_saturation_periods =
-            (lockup_saturation_secs + period_secs - secs_to_closest_cliff) / period_secs;
+        if secs_to_closest_cliff >= lockup_saturation_secs {
+            return Ok(max_locked_vote_weight);
+        }
+
+        // In the example above, periods_total was 5.
+        let denominator = periods_total.checked_mul(lockup_saturation_secs).unwrap();
+
+        let lockup_saturation_periods = (lockup_saturation_secs
+            .saturating_sub(secs_to_closest_cliff)
+            .checked_add(period_secs)
+            .unwrap())
+            / period_secs;
         let q = min(lockup_saturation_periods, periods_left);
-        let r = if q < periods_left {
-            periods_left - q
-        } else {
-            0
-        };
+        let r = periods_left.saturating_sub(q);
 
         // Sum of the full periods left for all remaining vesting cliffs.
         //
@@ -231,13 +245,15 @@ impl DepositEntry {
         //   and the next has two full periods left
         //   so sums to 3 = 3 * 2 / 2
         // - if there's only one period left, the sum is 0
-        let sum_full_periods = q.checked_mul(q - 1).unwrap() / 2;
+        let sum_full_periods = q.checked_mul(q.saturating_sub(1)).unwrap() / 2;
 
         // Total number of seconds left over all periods_left remaining vesting cliffs
-        let lockup_secs_fractional = q.checked_mul(secs_to_closest_cliff).unwrap() as u128;
-        let lockup_secs_full = sum_full_periods.checked_mul(period_secs).unwrap() as u128;
-        let lockup_secs_saturated = r.checked_mul(lockup_saturation_secs).unwrap() as u128;
-        let lockup_secs = lockup_secs_fractional + lockup_secs_full + lockup_secs_saturated;
+        let lockup_secs_fractional = q.checked_mul(secs_to_closest_cliff).unwrap();
+        let lockup_secs_full = sum_full_periods.checked_mul(period_secs).unwrap();
+        let lockup_secs_saturated = r.checked_mul(lockup_saturation_secs).unwrap();
+        let lockup_secs = lockup_secs_fractional as u128
+            + lockup_secs_full as u128
+            + lockup_secs_saturated as u128;
 
         Ok(u64::try_from(
             (max_locked_vote_weight as u128)
@@ -344,7 +360,7 @@ mod tests {
         let mut deposit = DepositEntry {
             amount_deposited_native: 35,
             amount_initially_locked_native: 30,
-            lockup: Lockup::new_from_periods(LockupKind::Monthly, 1000, 3).unwrap(),
+            lockup: Lockup::new_from_periods(LockupKind::Monthly, 1000, 1000, 3).unwrap(),
             is_used: true,
             allow_clawback: false,
             voting_mint_config_idx: 0,
@@ -404,13 +420,18 @@ mod tests {
     }
 
     #[test]
-    pub fn adrian_test() -> Result<()> {
-        let mut deposit = DepositEntry {
-            amount_deposited_native: 10000,
-            amount_initially_locked_native: 10000,
+    pub fn far_future_lockup_start_test() -> Result<()> {
+        // Check that voting power stays correct even if the lockup is very far in the
+        // future, or at least more than lockup_saturation_secs in the future.
+        let day: i64 = 86_400;
+        let saturation: i64 = 5 * day;
+        let lockup_start = 10_000_000_000; // arbitrary point
+        let deposit = DepositEntry {
+            amount_deposited_native: 10_000,
+            amount_initially_locked_native: 10_000,
             lockup: Lockup {
-                start_ts: 1642682051,
-                end_ts: 1642682137,
+                start_ts: lockup_start,
+                end_ts: lockup_start + 2 * day,
                 kind: Daily,
                 padding: [0; 15],
             },
@@ -420,29 +441,53 @@ mod tests {
             padding: [0; 13],
         };
         let voting_mint_config = VotingMintConfig {
-            mint: Pubkey::from_str("6dqK6igiavXcUeajbmUBA8R3ZrzoRd4SbH1LLPZMe34f").unwrap(),
-            grant_authority: Pubkey::from_str("56CRgykvwrWcCyKY1L5UCc3NgCKz57ZE7AMJcP5tccCu")
-                .unwrap(),
-            deposit_scaled_factor: 1000000000,
-            lockup_scaled_factor: 1000000000,
-            lockup_saturation_secs: 157680000,
+            mint: Pubkey::default(),
+            grant_authority: Pubkey::default(),
+            deposit_scaled_factor: 1_000_000_000, // 1x
+            lockup_scaled_factor: 1_000_000_000,  // 1x
+            lockup_saturation_secs: saturation as u64,
             digit_shift: 0,
             padding: [0; 31],
         };
 
         let deposit_vote_weight =
             voting_mint_config.deposit_vote_weight(deposit.amount_deposited_native)?;
-        println!("deposit_vote_weight {:?}", deposit_vote_weight);
+        assert_eq!(deposit_vote_weight, 10_000);
         let max_locked_vote_weight =
             voting_mint_config.max_lockup_vote_weight(deposit.amount_initially_locked_native)?;
-        println!("max_locked_vote_weight {:?}", max_locked_vote_weight);
+        assert_eq!(max_locked_vote_weight, 10_000);
 
-        let withdrawable = deposit.amount_withdrawable(16426933720);
-        println!("withdrawable {:?}", withdrawable);
+        // The timestamp 100_000 is very far before the lockup_start timestamp
+        let withdrawable = deposit.amount_withdrawable(100_000);
+        assert_eq!(withdrawable, 0);
+        let voting_power = deposit.voting_power(&voting_mint_config, 100_000).unwrap();
+        assert_eq!(voting_power, 20_000);
+
         let voting_power = deposit
-            .voting_power(&voting_mint_config, 16426933720 - 100000000)
+            .voting_power(&voting_mint_config, lockup_start - saturation)
             .unwrap();
-        println!("voting_power {:?}", voting_power);
+        assert_eq!(voting_power, 20_000);
+
+        let voting_power = deposit
+            .voting_power(&voting_mint_config, lockup_start - saturation + day)
+            .unwrap();
+        assert_eq!(voting_power, 20_000);
+
+        let voting_power = deposit
+            .voting_power(&voting_mint_config, lockup_start - saturation + day + 1)
+            .unwrap();
+        assert_eq!(voting_power, 19_999);
+
+        let voting_power = deposit
+            .voting_power(&voting_mint_config, lockup_start - saturation + 2 * day)
+            .unwrap();
+        assert_eq!(voting_power, 19_000); // the second cliff has only 4/5th of lockup period left
+
+        let voting_power = deposit
+            .voting_power(&voting_mint_config, lockup_start - saturation + 2 * day + 1)
+            .unwrap();
+        assert_eq!(voting_power, 18_999);
+
         Ok(())
     }
 }

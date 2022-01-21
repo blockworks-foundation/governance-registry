@@ -85,9 +85,9 @@ pub fn clawback(ctx: Context<Clawback>, deposit_entry_index: u8) -> Result<()> {
         deposit_entry.amount_deposited_native -= locked_amount;
 
         // Now that all locked funds are withdrawn, end the lockup
+        let curr_ts = registrar.clock_unix_timestamp();
         deposit_entry.amount_initially_locked_native = 0;
-        deposit_entry.lockup =
-            Lockup::new_from_periods(LockupKind::None, registrar.clock_unix_timestamp(), 0)?;
+        deposit_entry.lockup = Lockup::new_from_periods(LockupKind::None, curr_ts, curr_ts, 0)?;
         deposit_entry.allow_clawback = false;
         locked_amount
     };

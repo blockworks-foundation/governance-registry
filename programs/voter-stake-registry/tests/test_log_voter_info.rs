@@ -46,8 +46,6 @@ async fn test_print_event() -> Result<(), TransportError> {
         .ok_or(())
     );
 
-    assert_eq!(1, 2);
-
     Ok(())
 }
 

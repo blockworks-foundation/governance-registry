@@ -153,10 +153,11 @@ pub fn grant(
         .ok_or(ErrorCode::DepositEntryFull)?;
     let d_entry = &mut voter.deposits[free_entry_idx];
 
+    let curr_ts = registrar.clock_unix_timestamp();
     let start_ts = if let Some(v) = start_ts {
         i64::try_from(v).unwrap()
     } else {
-        registrar.clock_unix_timestamp()
+        curr_ts
     };
 
     // Set up a deposit.
@@ -164,7 +165,7 @@ pub fn grant(
     d_entry.is_used = true;
     d_entry.voting_mint_config_idx = mint_idx as u8;
     d_entry.allow_clawback = allow_clawback;
-    d_entry.lockup = Lockup::new_from_periods(kind, start_ts, periods)?;
+    d_entry.lockup = Lockup::new_from_periods(kind, curr_ts, start_ts, periods)?;
 
     // Deposit tokens, locking them all.
     token::transfer(ctx.accounts.transfer_ctx(), amount)?;

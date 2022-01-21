@@ -70,4 +70,8 @@ pub enum ErrorCode {
     InvalidLockupKind,
     #[msg("")]
     InvalidChangeToClawbackDepositEntry,
+    #[msg("")]
+    InternalErrorBadLockupVoteWeight,
+    #[msg("")]
+    DepositStartTooFarInFuture,
 }

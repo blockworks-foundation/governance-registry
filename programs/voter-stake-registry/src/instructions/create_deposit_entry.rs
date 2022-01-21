@@ -47,7 +47,7 @@ pub struct CreateDepositEntry<'info> {
 ///
 /// - `deposit_entry_index`: deposit entry to use
 /// - `kind`: Type of lockup to use.
-/// - `start_ts`: Start timestamp, defaults to current clock.
+/// - `start_ts`: Start timestamp in seconds, defaults to current clock.
 ///    The lockup will end after `start + periods * period_secs()`.
 ///
 ///    Note that tokens will already be locked before start_ts, it only defines
@@ -79,10 +79,11 @@ pub fn create_deposit_entry(
     let d_entry = &mut voter.deposits[deposit_entry_index as usize];
     require!(!d_entry.is_used, UnusedDepositEntryIndex);
 
+    let curr_ts = registrar.clock_unix_timestamp();
     let start_ts = if let Some(v) = start_ts {
         i64::try_from(v).unwrap()
     } else {
-        registrar.clock_unix_timestamp()
+        curr_ts
     };
 
     *d_entry = DepositEntry::default();
@@ -91,7 +92,7 @@ pub fn create_deposit_entry(
     d_entry.amount_deposited_native = 0;
     d_entry.amount_initially_locked_native = 0;
     d_entry.allow_clawback = allow_clawback;
-    d_entry.lockup = Lockup::new_from_periods(kind, start_ts, periods)?;
+    d_entry.lockup = Lockup::new_from_periods(kind, curr_ts, start_ts, periods)?;
 
     Ok(())
 }
