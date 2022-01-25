@@ -18,8 +18,8 @@ pub struct VotingMintConfig {
     /// The authority that is allowed to push grants into voters
     pub grant_authority: Pubkey,
 
-    /// Vote weight factor for deposits, in 1/SCALED_FACTOR_BASE units.
-    pub deposit_scaled_factor: u64,
+    /// Vote weight factor for unlocked deposits, in 1/SCALED_FACTOR_BASE units.
+    pub unlocked_scaled_factor: u64,
 
     /// Maximum vote weight factor for lockups, in 1/SCALED_FACTOR_BASE units.
     pub lockup_scaled_factor: u64,
@@ -65,10 +65,10 @@ impl VotingMintConfig {
     }
 
     /// The vote weight a deposit of a number of native tokens should have.
-    pub fn deposit_vote_weight(&self, amount_native: u64) -> Result<u64> {
+    pub fn unlocked_vote_weight(&self, amount_native: u64) -> Result<u64> {
         Self::apply_factor(
             self.base_vote_weight(amount_native)?,
-            self.deposit_scaled_factor,
+            self.unlocked_scaled_factor,
         )
     }
 

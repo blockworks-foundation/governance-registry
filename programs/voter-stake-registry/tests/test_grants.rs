@@ -163,7 +163,7 @@ async fn test_grants() -> Result<(), TransportError> {
     assert_eq!(deposit.lockup.kind, LockupKind::Monthly);
     assert_eq!(deposit.lockup.periods_total().unwrap(), 12);
     assert_eq!(deposit.lockup.periods_left(now as i64).unwrap(), 10);
-    assert_eq!(deposit.amount_withdrawable(now as i64), 2000);
+    assert_eq!(deposit.amount_unlocked(now as i64), 2000);
 
     Ok(())
 }

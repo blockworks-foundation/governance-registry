@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 #[derive(Debug)]
 pub struct VoterInfo {
     pub voting_power: u64,
-    pub voting_power_deposit_only: u64,
+    pub voting_power_unlocked_only: u64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug)]
@@ -30,12 +30,12 @@ pub struct LockingInfo {
 pub struct DepositEntryInfo {
     pub deposit_entry_index: u8,
     pub voting_mint_config_index: u8,
-    /// Amount that can be withdrawn directly
-    pub withdrawable: u64,
+    /// Amount that is unlocked
+    pub unlocked: u64,
     /// Voting power implied by this deposit entry
     pub voting_power: u64,
     /// Voting power that is not based on lockup
-    pub voting_power_deposit_only: u64,
+    pub voting_power_unlocked_only: u64,
     /// Information about locking, if any
     pub locking: Option<LockingInfo>,
 }

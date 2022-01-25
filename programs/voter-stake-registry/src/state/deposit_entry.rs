@@ -51,12 +51,12 @@ impl DepositEntry {
     /// For each cliff-locked token, the vote weight is:
     ///
     /// ```
-    ///    voting_power = deposit_vote_weight
+    ///    voting_power = unlocked_vote_weight
     ///                   + lockup_duration_factor * max_lockup_vote_weight
     /// ```
     ///
     /// with
-    ///    deposit_vote_weight and max_lockup_vote_weight from the
+    ///    unlocked_vote_weight and max_lockup_vote_weight from the
     ///        VotingMintConfig
     ///    lockup_duration_factor = lockup_time_remaining / max_lockup_time
     ///
@@ -89,8 +89,8 @@ impl DepositEntry {
     /// voting_power_linear_vesting() below.
     ///
     pub fn voting_power(&self, voting_mint_config: &VotingMintConfig, curr_ts: i64) -> Result<u64> {
-        let deposit_vote_weight =
-            voting_mint_config.deposit_vote_weight(self.amount_deposited_native)?;
+        let unlocked_vote_weight =
+            voting_mint_config.unlocked_vote_weight(self.amount_deposited_native)?;
         let max_locked_vote_weight =
             voting_mint_config.max_lockup_vote_weight(self.amount_initially_locked_native)?;
         let locked_vote_weight = self.voting_power_locked(
@@ -102,7 +102,7 @@ impl DepositEntry {
             locked_vote_weight <= max_locked_vote_weight,
             InternalErrorBadLockupVoteWeight
         );
-        deposit_vote_weight
+        unlocked_vote_weight
             .checked_add(locked_vote_weight)
             .ok_or(Error::ErrorCode(ErrorCode::VoterWeightOverflow))
     }
@@ -307,10 +307,10 @@ impl DepositEntry {
             .unwrap()
     }
 
-    /// Returns the amount that may be withdrawn given current vesting
+    /// Returns native tokens that are unlocked given current vesting
     /// and previous withdraws.
     #[inline(always)]
-    pub fn amount_withdrawable(&self, curr_ts: i64) -> u64 {
+    pub fn amount_unlocked(&self, curr_ts: i64) -> u64 {
         self.amount_deposited_native
             .checked_sub(self.amount_locked(curr_ts))
             .unwrap()
@@ -357,7 +357,6 @@ impl DepositEntry {
 mod tests {
     use super::*;
     use crate::LockupKind::Daily;
-    use std::str::FromStr;
 
     #[test]
     pub fn resolve_vesting() -> Result<()> {
@@ -378,10 +377,10 @@ mod tests {
 
         let mut time = 1001;
         assert_eq!(deposit.vested(time).unwrap(), 0);
-        assert_eq!(deposit.amount_withdrawable(time), 5);
+        assert_eq!(deposit.amount_unlocked(time), 5);
         deposit.resolve_vesting(time).unwrap(); // no effect
         assert_eq!(deposit.vested(time).unwrap(), 0);
-        assert_eq!(deposit.amount_withdrawable(time), 5);
+        assert_eq!(deposit.amount_unlocked(time), 5);
         assert_eq!(
             deposit.lockup.seconds_left(time),
             initial_deposit.lockup.seconds_left(time)
@@ -396,7 +395,7 @@ mod tests {
         assert_eq!(deposit.lockup.periods_total().unwrap(), 3);
         deposit.resolve_vesting(time).unwrap();
         assert_eq!(deposit.vested(time).unwrap(), 0);
-        assert_eq!(deposit.amount_withdrawable(time), 15);
+        assert_eq!(deposit.amount_unlocked(time), 15);
         assert_eq!(
             deposit.lockup.seconds_left(time),
             initial_deposit.lockup.seconds_left(time)
@@ -411,7 +410,7 @@ mod tests {
         assert_eq!(deposit.lockup.periods_total().unwrap(), 2);
         deposit.resolve_vesting(time).unwrap();
         assert_eq!(deposit.vested(time).unwrap(), 0);
-        assert_eq!(deposit.amount_withdrawable(time), 35);
+        assert_eq!(deposit.amount_unlocked(time), 35);
         assert_eq!(
             deposit.lockup.seconds_left(time),
             initial_deposit.lockup.seconds_left(time)
@@ -447,22 +446,22 @@ mod tests {
         let voting_mint_config = VotingMintConfig {
             mint: Pubkey::default(),
             grant_authority: Pubkey::default(),
-            deposit_scaled_factor: 1_000_000_000, // 1x
-            lockup_scaled_factor: 1_000_000_000,  // 1x
+            unlocked_scaled_factor: 1_000_000_000, // 1x
+            lockup_scaled_factor: 1_000_000_000,   // 1x
             lockup_saturation_secs: saturation as u64,
             digit_shift: 0,
             padding: [0; 31],
         };
 
-        let deposit_vote_weight =
-            voting_mint_config.deposit_vote_weight(deposit.amount_deposited_native)?;
-        assert_eq!(deposit_vote_weight, 10_000);
+        let unlocked_vote_weight =
+            voting_mint_config.unlocked_vote_weight(deposit.amount_deposited_native)?;
+        assert_eq!(unlocked_vote_weight, 10_000);
         let max_locked_vote_weight =
             voting_mint_config.max_lockup_vote_weight(deposit.amount_initially_locked_native)?;
         assert_eq!(max_locked_vote_weight, 10_000);
 
         // The timestamp 100_000 is very far before the lockup_start timestamp
-        let withdrawable = deposit.amount_withdrawable(100_000);
+        let withdrawable = deposit.amount_unlocked(100_000);
         assert_eq!(withdrawable, 0);
         let voting_power = deposit.voting_power(&voting_mint_config, 100_000).unwrap();
         assert_eq!(voting_power, 20_000);

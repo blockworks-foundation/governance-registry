@@ -27,7 +27,7 @@ async fn get_lockup_data(
         duration,
         d.amount_initially_locked_native,
         d.amount_deposited_native,
-        d.amount_withdrawable(now),
+        d.amount_unlocked(now),
     )
 }
 

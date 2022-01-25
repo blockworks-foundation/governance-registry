@@ -98,8 +98,8 @@ pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) ->
     let curr_ts = registrar.clock_unix_timestamp();
     let deposit_entry = voter.active_deposit_mut(deposit_entry_index)?;
     require!(
-        deposit_entry.amount_withdrawable(curr_ts) >= amount,
-        InsufficientVestedTokens
+        deposit_entry.amount_unlocked(curr_ts) >= amount,
+        InsufficientUnlockedTokens
     );
 
     // Get the exchange rate for the token being withdrawn.

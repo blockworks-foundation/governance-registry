@@ -32,7 +32,7 @@ pub fn log_voter_info(ctx: Context<LogVoterInfo>, deposit_entry_begin: u8) -> Re
     msg!("voter");
     emit!(VoterInfo {
         voting_power: voter.weight(&registrar)?,
-        voting_power_deposit_only: voter.weight_from_deposit(&registrar)?,
+        voting_power_unlocked_only: voter.weight_from_unlocked(&registrar)?,
     });
 
     msg!("deposit_entries");
@@ -69,10 +69,10 @@ pub fn log_voter_info(ctx: Context<LogVoterInfo>, deposit_entry_begin: u8) -> Re
         emit!(DepositEntryInfo {
             deposit_entry_index: deposit_index as u8,
             voting_mint_config_index: deposit.voting_mint_config_idx,
-            withdrawable: deposit.amount_withdrawable(curr_ts),
+            unlocked: deposit.amount_unlocked(curr_ts),
             voting_power: deposit.voting_power(voting_mint_config, curr_ts)?,
-            voting_power_deposit_only: voting_mint_config
-                .deposit_vote_weight(deposit.amount_deposited_native)?,
+            voting_power_unlocked_only: voting_mint_config
+                .unlocked_vote_weight(deposit.amount_deposited_native)?,
             locking: locking_info,
         });
     }

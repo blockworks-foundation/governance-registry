@@ -40,8 +40,8 @@ pub fn internal_transfer_unlocked(
 
     // Reduce source amounts
     require!(
-        amount <= source.amount_withdrawable(curr_ts),
-        InsufficientVestedTokens
+        amount <= source.amount_unlocked(curr_ts),
+        InsufficientUnlockedTokens
     );
     source.amount_deposited_native = source.amount_deposited_native.checked_sub(amount).unwrap();
 

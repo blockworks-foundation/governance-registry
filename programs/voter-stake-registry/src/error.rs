@@ -28,7 +28,7 @@ pub enum ErrorCode {
     UnusedDepositEntryIndex,
     // 6008 / 0x1778
     #[msg("")]
-    InsufficientVestedTokens,
+    InsufficientUnlockedTokens,
     // 6009 / 0x1779
     #[msg("")]
     UnableToConvert,

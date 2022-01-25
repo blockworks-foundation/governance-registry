@@ -26,11 +26,7 @@ const_assert!(std::mem::size_of::<Registrar>() == 5 * 32 + 4 * 120 + 8 + 1 + 31)
 
 impl Registrar {
     pub fn clock_unix_timestamp(&self) -> i64 {
-        Clock::get()
-            .unwrap()
-            .unix_timestamp
-            .checked_add(self.time_offset)
-            .unwrap()
+        Clock::get().unwrap().unix_timestamp + self.time_offset
     }
 
     pub fn voting_mint_config_index(&self, mint: Pubkey) -> Result<usize> {
@@ -53,7 +49,7 @@ impl Registrar {
                     .ok_or(Error::ErrorCode(ErrorCode::VotingMintNotFound))?;
                 let mint = Account::<Mint>::try_from(mint_account)?;
                 sum = sum
-                    .checked_add(voting_mint_config.deposit_vote_weight(mint.supply)?)
+                    .checked_add(voting_mint_config.unlocked_vote_weight(mint.supply)?)
                     .ok_or(Error::ErrorCode(ErrorCode::VoterWeightOverflow))?;
                 sum = sum
                     .checked_add(voting_mint_config.max_lockup_vote_weight(mint.supply)?)

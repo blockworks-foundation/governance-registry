@@ -31,13 +31,13 @@ impl Voter {
             })
     }
 
-    pub fn weight_from_deposit(&self, registrar: &Registrar) -> Result<u64> {
+    pub fn weight_from_unlocked(&self, registrar: &Registrar) -> Result<u64> {
         self.deposits
             .iter()
             .filter(|d| d.is_used)
             .try_fold(0u64, |sum, d| {
                 registrar.voting_mints[d.voting_mint_config_idx as usize]
-                    .deposit_vote_weight(d.amount_deposited_native)
+                    .unlocked_vote_weight(d.amount_deposited_native)
                     .map(|vp| sum.checked_add(vp).unwrap())
             })
     }

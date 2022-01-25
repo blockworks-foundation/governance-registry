@@ -99,7 +99,7 @@ impl AddinCookie {
         index: u16,
         mint: &MintCookie,
         digit_shift: i8,
-        deposit_scaled_factor: f64,
+        unlocked_scaled_factor: f64,
         lockup_scaled_factor: f64,
         lockup_saturation_secs: u64,
         grant_authority: Option<Pubkey>,
@@ -110,7 +110,7 @@ impl AddinCookie {
             &voter_stake_registry::instruction::ConfigureVotingMint {
                 idx: index,
                 digit_shift,
-                deposit_scaled_factor: (deposit_scaled_factor * 1e9) as u64,
+                unlocked_scaled_factor: (unlocked_scaled_factor * 1e9) as u64,
                 lockup_scaled_factor: (lockup_scaled_factor * 1e9) as u64,
                 lockup_saturation_secs,
                 grant_authority,
@@ -608,7 +608,7 @@ impl AddinCookie {
     }
 
     #[allow(dead_code)]
-    pub async fn internal_transfer(
+    pub async fn internal_transfer_locked(
         &self,
         registrar: &RegistrarCookie,
         voter: &VoterCookie,
@@ -618,7 +618,7 @@ impl AddinCookie {
         amount: u64,
     ) -> Result<(), TransportError> {
         let data = anchor_lang::InstructionData::data(
-            &voter_stake_registry::instruction::InternalTransfer {
+            &voter_stake_registry::instruction::InternalTransferLocked {
                 source_deposit_entry_index,
                 target_deposit_entry_index,
                 amount,
@@ -626,7 +626,48 @@ impl AddinCookie {
         );
 
         let accounts = anchor_lang::ToAccountMetas::to_account_metas(
-            &voter_stake_registry::accounts::InternalTransfer {
+            &voter_stake_registry::accounts::InternalTransferLocked {
+                registrar: registrar.address,
+                voter: voter.address,
+                voter_authority: authority.pubkey(),
+            },
+            None,
+        );
+
+        let instructions = vec![Instruction {
+            program_id: self.program_id,
+            accounts,
+            data,
+        }];
+
+        // clone the secrets
+        let signer = Keypair::from_base58_string(&authority.to_base58_string());
+
+        self.solana
+            .process_transaction(&instructions, Some(&[&signer]))
+            .await
+    }
+
+    #[allow(dead_code)]
+    pub async fn internal_transfer_unlocked(
+        &self,
+        registrar: &RegistrarCookie,
+        voter: &VoterCookie,
+        authority: &Keypair,
+        source_deposit_entry_index: u8,
+        target_deposit_entry_index: u8,
+        amount: u64,
+    ) -> Result<(), TransportError> {
+        let data = anchor_lang::InstructionData::data(
+            &voter_stake_registry::instruction::InternalTransferUnlocked {
+                source_deposit_entry_index,
+                target_deposit_entry_index,
+                amount,
+            },
+        );
+
+        let accounts = anchor_lang::ToAccountMetas::to_account_metas(
+            &voter_stake_registry::accounts::InternalTransferUnlocked {
                 registrar: registrar.address,
                 voter: voter.address,
                 voter_authority: authority.pubkey(),

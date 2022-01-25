@@ -1072,7 +1072,7 @@ export type VoterStakeRegistry = {
     },
     {
       "code": 6008,
-      "name": "InsufficientVestedTokens",
+      "name": "InsufficientUnlockedTokens",
       "msg": ""
     },
     {
@@ -2277,7 +2277,7 @@ export const IDL: VoterStakeRegistry = {
     },
     {
       "code": 6008,
-      "name": "InsufficientVestedTokens",
+      "name": "InsufficientUnlockedTokens",
       "msg": ""
     },
     {

@@ -27,7 +27,7 @@ async fn get_lockup_data(
         duration,
         d.amount_initially_locked_native,
         d.amount_deposited_native,
-        d.amount_withdrawable(now),
+        d.amount_unlocked(now),
     )
 }
 
@@ -89,8 +89,8 @@ async fn test_internal_transfer() -> Result<(), TransportError> {
             amount,
         )
     };
-    let internal_transfer = |source: u8, target: u8, amount: u64| {
-        addin.internal_transfer(&registrar, &voter, &voter_authority, source, target, amount)
+    let internal_transfer_locked = |source: u8, target: u8, amount: u64| {
+        addin.internal_transfer_locked(&registrar, &voter, &voter_authority, source, target, amount)
     };
     let time_offset = Arc::new(RefCell::new(0i64));
     let advance_time = |extra: u64| {
@@ -148,13 +148,13 @@ async fn test_internal_transfer() -> Result<(), TransportError> {
     );
     assert_eq!(lockup_status(1).await, (day + hour, 3 * day, 30, 30, 10));
 
-    internal_transfer(0, 1, 1)
+    internal_transfer_locked(0, 1, 1)
         .await
         .expect_err("can't make less strict/period");
-    internal_transfer(1, 0, 21)
+    internal_transfer_locked(1, 0, 21)
         .await
         .expect_err("can only transfer locked");
-    internal_transfer(1, 0, 10).await.unwrap();
+    internal_transfer_locked(1, 0, 10).await.unwrap();
 
     context.solana.advance_clock_by_slots(2).await;
     assert_eq!(
@@ -198,7 +198,7 @@ async fn test_internal_transfer() -> Result<(), TransportError> {
     assert_eq!(lockup_status(2).await, (0, 5 * day, 1000, 1000, 0));
     assert_eq!(lockup_status(3).await, (0, 5 * day, 0, 0, 0));
 
-    internal_transfer(2, 3, 100).await.unwrap();
+    internal_transfer_locked(2, 3, 100).await.unwrap();
 
     context.solana.advance_clock_by_slots(2).await;
     assert_eq!(lockup_status(2).await, (0, 5 * day, 900, 900, 0));
@@ -206,7 +206,7 @@ async fn test_internal_transfer() -> Result<(), TransportError> {
 
     advance_time(2 * day + hour).await;
 
-    internal_transfer(2, 3, 100)
+    internal_transfer_locked(2, 3, 100)
         .await
         .expect_err("target deposit has not enough period left");
 
@@ -224,7 +224,7 @@ async fn test_internal_transfer() -> Result<(), TransportError> {
         )
         .await
         .unwrap();
-    internal_transfer(2, 4, 100).await.unwrap();
+    internal_transfer_locked(2, 4, 100).await.unwrap();
 
     assert_eq!(lockup_status(2).await, (0, 5 * day, 800, 800, 0));
     assert_eq!(
@@ -237,7 +237,7 @@ async fn test_internal_transfer() -> Result<(), TransportError> {
     context.solana.advance_clock_by_slots(2).await;
 
     // still ok, cliff deposit 4 still has 7 days of lockup left, which is >= 5
-    internal_transfer(2, 4, 800).await.unwrap();
+    internal_transfer_locked(2, 4, 800).await.unwrap();
 
     assert_eq!(lockup_status(2).await, (0, 5 * day, 0, 0, 0));
     assert_eq!(lockup_status(4).await, (hour, 7 * day, 900, 900, 0));
