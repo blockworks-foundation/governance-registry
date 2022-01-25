@@ -17,7 +17,6 @@ pub struct CloseVoter<'info> {
         close = sol_destination)]
     pub voter: AccountLoader<'info, Voter>,
 
-    #[account(mut)]
     pub voter_authority: Signer<'info>,
 
     #[account(mut)]
