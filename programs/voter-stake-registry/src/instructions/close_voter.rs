@@ -3,6 +3,9 @@ use crate::state::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, CloseAccount, Token, TokenAccount};
 
+// Remaining accounts must be all the token token accounts owned by voter, he wants to close,
+// they should be writable so that they can be closed and sol required for rent
+// can then be sent back to the sol_destination
 #[derive(Accounts)]
 pub struct CloseVoter<'info> {
     pub registrar: AccountLoader<'info, Registrar>,
