@@ -132,7 +132,7 @@ If you want access to the tokens again, you need to start the unlocking process
 by either
 - changing the whole deposit entry to `Cliff` with `ResetLockup`, or
 - creating a new `Cliff` deposit entry and transfering some locked tokens from
-  your `Constant` deposit entry over with `InternalTransfer`.
+  your `Constant` deposit entry over with `InternalTransferLocked`.
 
 In both cases you'll need to wait for the cliff to be reached before being able
 to access the tokens again.
@@ -176,10 +176,15 @@ to access the tokens again.
   Re-lock tokens where the lockup has expired, or increase the duration of the lockup or
   change the lockup kind.
 
-- [`InternalTransfer`](programs/voter-stake-registry/src/instructions/internal_transfer.rs)
+- [`InternalTransferLocked`](programs/voter-stake-registry/src/instructions/internal_transfer_locked.rs)
 
   Transfer locked tokens from one deposit entry to another. Useful for splitting off a
   chunk of a "constant" lockup deposit entry that you want to start the unlock process on.
+
+- [`InternalTransferUnocked`](programs/voter-stake-registry/src/instructions/internal_transfer_unlocked.rs)
+
+  Transfer unlocked tokens from one deposit entry to another. Useful for splitting off a
+  chunk to be locked again in a different deposit entry without having to withdraw and redeposit.
 
 - [`UpdateVoterWeightRecord`](programs/voter-stake-registry/src/instructions/update_voter_weight_record.rs)
 

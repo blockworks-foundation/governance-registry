@@ -3,7 +3,7 @@ use crate::state::*;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct InternalTransfer<'info> {
+pub struct InternalTransferLocked<'info> {
     pub registrar: AccountLoader<'info, Registrar>,
 
     // checking the PDA address it just an extra precaution,
@@ -31,8 +31,8 @@ pub struct InternalTransfer<'info> {
 /// - transfering a small part of a big "constant" lockup deposit entry into a "cliff"
 ///   locked deposit entry to start the unlocking process (reset_lockup could only
 ///   change the whole deposit entry to "cliff")
-pub fn internal_transfer(
-    ctx: Context<InternalTransfer>,
+pub fn internal_transfer_locked(
+    ctx: Context<InternalTransferLocked>,
     source_deposit_entry_index: u8,
     target_deposit_entry_index: u8,
     amount: u64,
