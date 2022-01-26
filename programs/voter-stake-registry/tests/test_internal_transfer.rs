@@ -92,6 +92,16 @@ async fn test_internal_transfer() -> Result<(), TransportError> {
     let internal_transfer_locked = |source: u8, target: u8, amount: u64| {
         addin.internal_transfer_locked(&registrar, &voter, &voter_authority, source, target, amount)
     };
+    let internal_transfer_unlocked = |source: u8, target: u8, amount: u64| {
+        addin.internal_transfer_unlocked(
+            &registrar,
+            &voter,
+            &voter_authority,
+            source,
+            target,
+            amount,
+        )
+    };
     let time_offset = Arc::new(RefCell::new(0i64));
     let advance_time = |extra: u64| {
         *time_offset.borrow_mut() += extra as i64;
@@ -162,6 +172,30 @@ async fn test_internal_transfer() -> Result<(), TransportError> {
         (day + 2 * hour, 2 * month, 210, 310, 100)
     );
     assert_eq!(lockup_status(1).await, (hour, 2 * day, 10, 20, 10));
+
+    //
+    // test transfering unlocked funds
+    //
+
+    internal_transfer_unlocked(2, 0, 1000)
+        .await
+        .expect_err("deposit entry not in use");
+    internal_transfer_unlocked(1, 0, 11)
+        .await
+        .expect_err("amount too high");
+    internal_transfer_unlocked(1, 0, 10).await.unwrap();
+    assert_eq!(
+        lockup_status(0).await,
+        (day + 2 * hour, 2 * month, 210, 320, 110)
+    );
+    assert_eq!(lockup_status(1).await, (hour, 2 * day, 10, 10, 0));
+
+    internal_transfer_unlocked(0, 1, 100).await.unwrap();
+    assert_eq!(
+        lockup_status(0).await,
+        (day + 2 * hour, 2 * month, 210, 220, 10)
+    );
+    assert_eq!(lockup_status(1).await, (hour, 2 * day, 10, 110, 100));
 
     //
     // test partially moving tokens from constant deposit to cliff
