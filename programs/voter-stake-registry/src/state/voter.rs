@@ -54,7 +54,7 @@ impl Voter {
         &self,
         account_info: &AccountInfo,
         registrar: &Registrar,
-    ) -> Result<token_owner_record::TokenOwnerRecord> {
+    ) -> Result<token_owner_record::TokenOwnerRecordV2> {
         let record = token_owner_record::get_token_owner_record_data_for_realm_and_governing_mint(
             &registrar.governance_program_id,
             account_info,

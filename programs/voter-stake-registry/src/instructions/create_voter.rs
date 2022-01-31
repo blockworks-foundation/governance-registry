@@ -2,7 +2,7 @@ use crate::error::*;
 use crate::state::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::sysvar::instructions as tx_instructions;
-use spl_governance::addins::voter_weight::VoterWeightAccountType;
+use spl_governance_addin_api::voter_weight::VoterWeightRecord;
 use std::mem::size_of;
 
 #[derive(Accounts)]
@@ -79,7 +79,7 @@ pub fn create_voter(
     voter.registrar = ctx.accounts.registrar.key();
 
     let voter_weight_record = &mut ctx.accounts.voter_weight_record;
-    voter_weight_record.account_type = VoterWeightAccountType::VoterWeightRecord;
+    voter_weight_record.account_type = VoterWeightRecord;
     voter_weight_record.realm = registrar.realm;
     voter_weight_record.governing_token_mint = registrar.realm_governing_token_mint;
     voter_weight_record.governing_token_owner = voter_authority;

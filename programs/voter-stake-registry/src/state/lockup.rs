@@ -1,6 +1,6 @@
 use crate::error::*;
+use crate::vote_weight_record;
 use anchor_lang::prelude::*;
-use anchor_spl::vote_weight_record;
 use std::convert::TryFrom;
 
 // Generate a VoteWeightRecord Anchor wrapper, owned by the current program.

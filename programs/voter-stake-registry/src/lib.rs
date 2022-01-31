@@ -5,6 +5,7 @@ use state::*;
 
 mod error;
 pub mod events;
+mod governance;
 mod instructions;
 pub mod state;
 
