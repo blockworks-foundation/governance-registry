@@ -80,6 +80,7 @@ impl GovernanceCookie {
             &payer.pubkey(),
             None,
             Some(*voter_weight_addin),
+            None,
             name.to_string(),
             0,
             spl_governance::state::enums::MintMaxVoteWeightSource::SupplyFraction(10000000000),
@@ -148,7 +149,7 @@ impl GovernanceRealmCookie {
         payer: &Keypair,
         vwr_instruction: Instruction,
     ) -> AccountGovernanceCookie {
-        let account_governance = spl_governance::state::governance::get_account_governance_address(
+        let account_governance = spl_governance::state::governance::get_governance_address(
             &self.governance.program_id,
             &self.realm,
             &governed_account,
@@ -156,10 +157,10 @@ impl GovernanceRealmCookie {
 
         let instructions = vec![
             vwr_instruction,
-            spl_governance::instruction::create_account_governance(
+            spl_governance::instruction::create_governance(
                 &self.governance.program_id,
                 &self.realm,
-                &governed_account,
+                Some(&governed_account),
                 &voter.token_owner_record,
                 &payer.pubkey(),
                 &authority.pubkey(),
@@ -167,12 +168,12 @@ impl GovernanceRealmCookie {
                 spl_governance::state::governance::GovernanceConfig {
                     vote_threshold_percentage:
                         spl_governance::state::enums::VoteThresholdPercentage::YesVote(50),
-                    min_community_tokens_to_create_proposal: 1000,
-                    min_instruction_hold_up_time: 0,
+                    min_community_weight_to_create_proposal: 1000,
+                    min_transaction_hold_up_time: 0,
                     max_voting_time: 10,
-                    vote_weight_source: spl_governance::state::enums::VoteWeightSource::Deposit,
+                    vote_tipping: spl_governance::state::enums::VoteTipping::Disabled,
                     proposal_cool_off_time: 0,
-                    min_council_tokens_to_create_proposal: 1,
+                    min_council_weight_to_create_proposal: 1,
                 },
             ),
         ];
@@ -222,12 +223,12 @@ impl GovernanceRealmCookie {
                 spl_governance::state::governance::GovernanceConfig {
                     vote_threshold_percentage:
                         spl_governance::state::enums::VoteThresholdPercentage::YesVote(50),
-                    min_community_tokens_to_create_proposal: 1000,
-                    min_instruction_hold_up_time: 0,
+                    min_community_weight_to_create_proposal: 1000,
+                    min_transaction_hold_up_time: 0,
                     max_voting_time: 10,
-                    vote_weight_source: spl_governance::state::enums::VoteWeightSource::Deposit,
+                    vote_tipping: spl_governance::state::enums::VoteTipping::Disabled,
                     proposal_cool_off_time: 0,
-                    min_council_tokens_to_create_proposal: 1,
+                    min_council_weight_to_create_proposal: 1,
                 },
                 true,
             ),
@@ -293,8 +294,11 @@ impl GovernanceRealmCookie {
             ),
             spl_governance::instruction::sign_off_proposal(
                 &self.governance.program_id,
+                &self.realm,
+                &governance,
                 &proposal,
                 &authority.pubkey(),
+                None,
             ),
         ];
 
@@ -335,6 +339,7 @@ impl GovernanceRealmCookie {
                 &self.community_token_mint.pubkey.unwrap(),
                 &payer.pubkey(),
                 Some(voter.voter_weight_record),
+                None,
                 vote_record::Vote::Approve(vec![vote_record::VoteChoice {
                     rank: 0,
                     weight_percentage: 100,

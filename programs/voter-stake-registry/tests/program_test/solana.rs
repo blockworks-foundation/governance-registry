@@ -59,7 +59,7 @@ impl SolanaCookie {
         self.context
             .borrow_mut()
             .banks_client
-            .get_clock()
+            .get_sysvar::<solana_program::clock::Clock>()
             .await
             .unwrap()
     }

@@ -1,7 +1,6 @@
 use anchor_spl::token::TokenAccount;
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer, transport::TransportError};
-use std::borrow::BorrowMut;
 
 use program_test::*;
 use voter_stake_registry::state::Voter;

@@ -20,7 +20,7 @@ test-bpf = []
 [dependencies]
 # a) for deployment use these
 anchor-lang = "0.20.1"
-anchor-spl = { version = "0.20.1", features = ["governance"] }
+anchor-spl = { version = "0.20.1" }
 # b) while testing, use below dependencies for debugging instead of above ones
 # anchor-lang = { git = "https://github.com/microwavedcola1/anchor.git", branch = "master-debug" }
 # anchor-spl = { git = "https://github.com/microwavedcola1/anchor.git", branch = "master-debug", features = ["governance"]}
@@ -31,13 +31,13 @@ spl-governance = { git = "https://github.com/solana-labs/solana-program-library"
 spl-governance-addin-api = { git = "https://github.com/solana-labs/solana-program-library", rev = "ebc91e871a0b39bf76fbce52c6da87c9b674cf4e" }
 
 # refer solana to the same version anchor-lang 0.20.1 refers to
-solana-program = "1.9.5"
+solana-program = "1.8.5"
 static_assertions = "1.1"
 
 [dev-dependencies]
-solana-sdk = "1.9.5"
-solana-program-test = "1.9.5"
-solana-logger = "1.9.5"
+solana-sdk = "1.8.5"
+solana-program-test = "1.8.5"
+solana-logger = "1.8.5"
 spl-token = { version = "^3.0.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^1.0.3", features = ["no-entrypoint"] }
 bytemuck = "^1.7.2"
