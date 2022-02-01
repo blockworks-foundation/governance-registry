@@ -27,8 +27,8 @@ anchor-spl = { version = "0.20.1" }
 
 # The rev used for spl-governance must match what the fixture binary
 # programs/voter-stake-registry/tests/fixtures/spl_governance.so is built from.
-spl-governance = { git = "https://github.com/solana-labs/solana-program-library", rev = "ebc91e871a0b39bf76fbce52c6da87c9b674cf4e", features = ["no-entrypoint"] }
-spl-governance-addin-api = { git = "https://github.com/solana-labs/solana-program-library", rev = "ebc91e871a0b39bf76fbce52c6da87c9b674cf4e" }
+spl-governance = { git = "https://github.com/solana-labs/solana-program-library", rev = "4c0bc4c968d5d6feaee18b1c633c636f20d66b15", features = ["no-entrypoint"] }
+spl-governance-addin-api = { git = "https://github.com/solana-labs/solana-program-library", rev = "4c0bc4c968d5d6feaee18b1c633c636f20d66b15" }
 
 # refer solana to the same version anchor-lang 0.20.1 refers to
 solana-program = "1.8.5"
