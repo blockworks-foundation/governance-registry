@@ -26,7 +26,11 @@ const_assert!(std::mem::size_of::<Registrar>() == 5 * 32 + 4 * 120 + 8 + 1 + 31)
 
 impl Registrar {
     pub fn clock_unix_timestamp(&self) -> i64 {
-        Clock::get().unwrap().unix_timestamp + self.time_offset
+        Clock::get()
+            .unwrap()
+            .unix_timestamp
+            .checked_add(self.time_offset)
+            .unwrap()
     }
 
     pub fn voting_mint_config_index(&self, mint: Pubkey) -> Result<usize> {
