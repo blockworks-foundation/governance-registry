@@ -27,7 +27,11 @@ anchor-spl = { version = "0.20.1" }
 
 # The rev used for spl-governance must match what the fixture binary
 # programs/voter-stake-registry/tests/fixtures/spl_governance.so is built from.
+
+# spl-governance 2.2.0 TODO: Upgrade Anchor to spl-token 3.3.0 to refernce directly 
 spl-governance = { git = "https://github.com/solana-labs/solana-program-library", rev = "4c0bc4c968d5d6feaee18b1c633c636f20d66b15", features = ["no-entrypoint"] }
+
+# spl-governance-addin-api 0.1.0 TODO: Upgrade Anchor to spl-token 3.3.0
 spl-governance-addin-api = { git = "https://github.com/solana-labs/solana-program-library", rev = "4c0bc4c968d5d6feaee18b1c633c636f20d66b15" }
 
 # refer solana to the same version anchor-lang 0.20.1 refers to
