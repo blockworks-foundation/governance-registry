@@ -97,6 +97,7 @@ pub fn is_freshly_initialized(account_info: &AccountInfo) -> Result<bool> {
 ///
 /// The voter may or may not exist in advance.
 /// Creates a new deposit entry -- errors if no free ones are available.
+#[allow(clippy::too_many_arguments)]
 pub fn grant(
     ctx: Context<Grant>,
     voter_bump: u8,

@@ -129,7 +129,7 @@ pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) ->
 
     // Update the voter weight record
     let record = &mut ctx.accounts.voter_weight_record;
-    record.voter_weight = voter.weight(&registrar)?;
+    record.voter_weight = voter.weight(registrar)?;
     record.voter_weight_expiry = Some(Clock::get()?.slot);
 
     Ok(())

@@ -18,7 +18,7 @@ pub struct UpdateMaxVoteWeight<'info> {
 /// Note that this method is only safe to use if the cumulative supply for
 /// all tokens fits into a u64 *after* converting into common decimals, as
 /// defined by the registrar's `rate_decimal` field.
-pub fn update_max_vote_weight<'info>(ctx: Context<UpdateMaxVoteWeight>) -> Result<()> {
+pub fn update_max_vote_weight(ctx: Context<UpdateMaxVoteWeight>) -> Result<()> {
     let registrar = &ctx.accounts.registrar.load()?;
     let _max_vote_weight = registrar.max_vote_weight(ctx.remaining_accounts)?;
     // TODO: SPL governance has not yet implemented this feature.

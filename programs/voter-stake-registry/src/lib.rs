@@ -195,7 +195,7 @@ pub mod voter_stake_registry {
         instructions::update_voter_weight_record(ctx)
     }
 
-    pub fn update_max_vote_weight<'info>(ctx: Context<UpdateMaxVoteWeight>) -> Result<()> {
+    pub fn update_max_vote_weight(ctx: Context<UpdateMaxVoteWeight>) -> Result<()> {
         instructions::update_max_vote_weight(ctx)
     }
 

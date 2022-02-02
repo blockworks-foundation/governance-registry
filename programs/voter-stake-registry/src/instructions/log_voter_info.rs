@@ -31,8 +31,8 @@ pub fn log_voter_info(ctx: Context<LogVoterInfo>, deposit_entry_begin: u8) -> Re
 
     msg!("voter");
     emit!(VoterInfo {
-        voting_power: voter.weight(&registrar)?,
-        voting_power_unlocked_only: voter.weight_from_unlocked(&registrar)?,
+        voting_power: voter.weight(registrar)?,
+        voting_power_unlocked_only: voter.weight_from_unlocked(registrar)?,
     });
 
     msg!("deposit_entries");

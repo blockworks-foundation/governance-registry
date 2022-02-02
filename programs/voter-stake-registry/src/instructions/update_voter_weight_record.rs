@@ -37,7 +37,7 @@ pub fn update_voter_weight_record(ctx: Context<UpdateVoterWeightRecord>) -> Resu
     let registrar = &ctx.accounts.registrar.load()?;
     let voter = ctx.accounts.voter.load()?;
     let record = &mut ctx.accounts.voter_weight_record;
-    record.voter_weight = voter.weight(&registrar)?;
+    record.voter_weight = voter.weight(registrar)?;
     record.voter_weight_expiry = Some(Clock::get()?.slot);
 
     Ok(())
