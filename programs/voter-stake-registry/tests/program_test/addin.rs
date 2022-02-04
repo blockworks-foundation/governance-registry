@@ -326,7 +326,8 @@ impl AddinCookie {
         allow_clawback: bool,
         amount: u64,
         deposit_token: Pubkey,
-        authority: &Keypair,
+        token_authority: &Keypair,
+        grant_authority: &Keypair,
     ) -> std::result::Result<VoterCookie, TransportError> {
         let (voter, voter_bump) = Pubkey::find_program_address(
             &[
@@ -370,8 +371,9 @@ impl AddinCookie {
                 voter_weight_record,
                 vault,
                 deposit_token,
-                authority: authority.pubkey(),
-                payer: authority.pubkey(),
+                token_authority: token_authority.pubkey(),
+                grant_authority: grant_authority.pubkey(),
+                payer: token_authority.pubkey(),
                 deposit_mint: voting_mint.mint.pubkey.unwrap(),
                 system_program: solana_sdk::system_program::id(),
                 token_program: spl_token::id(),
@@ -388,10 +390,11 @@ impl AddinCookie {
         }];
 
         // clone the secrets
-        let signer1 = Keypair::from_base58_string(&authority.to_base58_string());
+        let signer1 = Keypair::from_base58_string(&grant_authority.to_base58_string());
+        let signer2 = Keypair::from_base58_string(&token_authority.to_base58_string());
 
         self.solana
-            .process_transaction(&instructions, Some(&[&signer1]))
+            .process_transaction(&instructions, Some(&[&signer1, &signer2]))
             .await?;
 
         Ok(voter_cookie)

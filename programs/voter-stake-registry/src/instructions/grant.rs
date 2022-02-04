@@ -53,14 +53,20 @@ pub struct Grant<'info> {
 
     #[account(
         mut,
-        constraint = deposit_token.owner == authority.key(),
+        constraint = deposit_token.owner == token_authority.key(),
         constraint = deposit_token.mint == deposit_mint.key(),
     )]
     pub deposit_token: Box<Account<'info, TokenAccount>>,
 
-    // Verification inline in instruction
-    pub authority: Signer<'info>,
+    /// Authority for transfering tokens away from deposit_token
+    pub token_authority: Signer<'info>,
 
+    /// Authority for making a grant to this voter account
+    ///
+    /// Verification inline in instruction
+    pub grant_authority: Signer<'info>,
+
+    /// Rent payer if a new account is to be created
     #[account(mut)]
     pub payer: Signer<'info>,
 
@@ -78,7 +84,7 @@ impl<'info> Grant<'info> {
         let accounts = token::Transfer {
             from: self.deposit_token.to_account_info(),
             to: self.vault.to_account_info(),
-            authority: self.authority.to_account_info(),
+            authority: self.token_authority.to_account_info(),
         };
         CpiContext::new(program, accounts)
     }
@@ -115,9 +121,14 @@ pub fn grant(
     let mint_idx = registrar.voting_mint_config_index(ctx.accounts.deposit_token.mint)?;
     let mint_config = &registrar.voting_mints[mint_idx];
 
-    let authority = ctx.accounts.authority.key();
+    // The grant instruction creates a new deposit entry for the target voter. This is a
+    // limited resource. If anyone could call "grant" then it could be used for denial of
+    // service by filling all deposit entries with tiny amounts and long lockup times.
+    let grant_authority = ctx.accounts.grant_authority.key();
     require!(
-        authority == registrar.realm_authority || authority == mint_config.grant_authority,
+        grant_authority == registrar.realm_authority
+            || grant_authority == mint_config.grant_authority
+            || grant_authority == voter_authority,
         InvalidAuthority
     );
 

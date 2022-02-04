@@ -86,6 +86,7 @@ async fn test_grants() -> Result<(), TransportError> {
             12000,
             grant_funds,
             &grant_authority,
+            &realm_authority,
         )
         .await
         .unwrap();
@@ -102,6 +103,7 @@ async fn test_grants() -> Result<(), TransportError> {
             true,
             24000,
             grant_funds,
+            &grant_authority,
             &grant_authority,
         )
         .await
@@ -131,6 +133,7 @@ async fn test_grants() -> Result<(), TransportError> {
     assert_eq!(deposit.lockup.periods_total().unwrap(), 12);
 
     // grant funds with a start time in the past
+    // by the voter authority itself
     context.solana.advance_clock_by_slots(2).await;
     let now = context.solana.get_clock().await.unix_timestamp as u64;
     let start = now - LockupKind::Monthly.period_secs() * 2 - 60;
@@ -146,6 +149,7 @@ async fn test_grants() -> Result<(), TransportError> {
             12000,
             grant_funds,
             &grant_authority,
+            &voter_authority,
         )
         .await
         .unwrap();
