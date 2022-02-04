@@ -1,3 +1,6 @@
+anchor_version = "0.20.1"
+solana_version = "1.9.5"
+
 [programs.localnet]
 voter_stake_registry = "4Q6WW2ouZ6V3iaNm56MTd5n2tnTm4C5fiH8miFHnAFHo"
 
