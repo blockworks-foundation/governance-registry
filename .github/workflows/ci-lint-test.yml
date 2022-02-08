@@ -1,9 +1,9 @@
 name: Lint and Test
 on:
   push:
-    branches: [master, v*.*]
+    branches: ["*"]
   pull_request:
-    branches: [master, v*.*]
+    branches: ["*"]
 
 env:
   CARGO_TERM_COLOR: always
