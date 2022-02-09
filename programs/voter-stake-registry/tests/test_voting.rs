@@ -28,6 +28,7 @@ async fn test_voting() -> Result<(), TransportError> {
     let voter_authority = &context.users[1].key;
     let voter2_authority = &context.users[2].key;
     let voter_mngo = context.users[1].token_accounts[0];
+    let voter_usdc = context.users[1].token_accounts[1];
     let token_owner_record = realm
         .create_token_owner_record(voter_authority.pubkey(), &payer)
         .await;
@@ -50,6 +51,22 @@ async fn test_voting() -> Result<(), TransportError> {
             0.0,
             5 * 365 * 24 * 60 * 60,
             None,
+            None,
+        )
+        .await;
+    let usdc_voting_mint = addin
+        .configure_voting_mint(
+            &registrar,
+            &realm_authority,
+            payer,
+            1,
+            &context.mints[1],
+            0,
+            0.0,
+            0.0,
+            5 * 365 * 24 * 60 * 60,
+            None,
+            Some(&[context.mints[0].pubkey.unwrap()]),
         )
         .await;
 
@@ -177,6 +194,33 @@ async fn test_voting() -> Result<(), TransportError> {
         .await
         .unwrap();
 
+    addin
+        .create_deposit_entry(
+            &registrar,
+            &voter2,
+            voter2_authority,
+            &usdc_voting_mint,
+            1,
+            LockupKind::None,
+            None,
+            0,
+            false,
+        )
+        .await
+        .unwrap();
+    addin
+        .deposit(
+            &registrar,
+            &voter2,
+            &usdc_voting_mint,
+            voter_authority,
+            voter_usdc,
+            1,
+            1000,
+        )
+        .await
+        .unwrap();
+
     realm
         .cast_vote(
             mint_governance.address,
@@ -210,6 +254,20 @@ async fn test_voting() -> Result<(), TransportError> {
         )
         .await
         .expect_err("could not withdraw");
+
+    // but can withdraw USDC
+    addin
+        .withdraw(
+            &registrar,
+            &voter2,
+            &usdc_voting_mint,
+            &voter2_authority,
+            voter_usdc,
+            1,
+            1,
+        )
+        .await
+        .unwrap();
 
     realm
         .relinquish_vote(

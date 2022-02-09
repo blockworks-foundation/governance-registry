@@ -54,6 +54,7 @@ async fn test_clawback() -> Result<(), TransportError> {
             0.0,
             5 * 365 * 24 * 60 * 60,
             None,
+            None,
         )
         .await;
 

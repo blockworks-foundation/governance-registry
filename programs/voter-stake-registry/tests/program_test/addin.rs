@@ -103,6 +103,7 @@ impl AddinCookie {
         lockup_scaled_factor: f64,
         lockup_saturation_secs: u64,
         grant_authority: Option<Pubkey>,
+        other_mints: Option<&[Pubkey]>,
     ) -> VotingMintConfigCookie {
         let deposit_mint = mint.pubkey.unwrap();
 
@@ -129,6 +130,11 @@ impl AddinCookie {
             deposit_mint,
             false,
         ));
+        for mint in other_mints.unwrap_or(&[]) {
+            accounts.push(anchor_lang::prelude::AccountMeta::new_readonly(
+                *mint, false,
+            ));
+        }
 
         let instructions = vec![Instruction {
             program_id: self.program_id,

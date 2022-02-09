@@ -80,6 +80,7 @@ async fn test_deposit_daily_vesting() -> Result<(), TransportError> {
             0.5,
             60 * 60 * 60, // 60h / 2.5d
             None,
+            None,
         )
         .await;
 

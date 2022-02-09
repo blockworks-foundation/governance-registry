@@ -87,12 +87,18 @@ pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) ->
     let registrar = &ctx.accounts.registrar.load()?;
     let voter = &mut ctx.accounts.voter.load_mut()?;
 
+    // Get the exchange rate for the token being withdrawn.
+    let mint_idx = registrar.voting_mint_config_index(ctx.accounts.destination.mint)?;
+
     // Governance may forbid withdraws, for example when engaged in a vote.
-    let token_owner_record = voter.load_token_owner_record(
-        &ctx.accounts.token_owner_record.to_account_info(),
-        registrar,
-    )?;
-    token_owner_record.assert_can_withdraw_governing_tokens()?;
+    // Not applicable for tokens that don't contribute to voting power.
+    if registrar.voting_mints[mint_idx].grants_vote_weight() {
+        let token_owner_record = voter.load_token_owner_record(
+            &ctx.accounts.token_owner_record.to_account_info(),
+            registrar,
+        )?;
+        token_owner_record.assert_can_withdraw_governing_tokens()?;
+    }
 
     // Get the deposit being withdrawn from.
     let curr_ts = registrar.clock_unix_timestamp();
@@ -101,9 +107,6 @@ pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) ->
         deposit_entry.amount_unlocked(curr_ts) >= amount,
         InsufficientUnlockedTokens
     );
-
-    // Get the exchange rate for the token being withdrawn.
-    let mint_idx = registrar.voting_mint_config_index(ctx.accounts.destination.mint)?;
     require!(
         mint_idx == deposit_entry.voting_mint_config_idx as usize,
         ErrorCode::InvalidMint

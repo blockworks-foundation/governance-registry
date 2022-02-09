@@ -47,6 +47,7 @@ async fn test_basic() -> Result<(), TransportError> {
             0.0,
             1,
             None,
+            None,
         )
         .await;
     let mngo_voting_mint = context
@@ -61,6 +62,7 @@ async fn test_basic() -> Result<(), TransportError> {
             1.0,
             0.0,
             5 * 365 * 24 * 60 * 60,
+            None,
             None,
         )
         .await;

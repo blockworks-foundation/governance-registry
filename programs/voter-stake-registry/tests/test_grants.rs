@@ -50,6 +50,7 @@ async fn test_grants() -> Result<(), TransportError> {
             0.0,
             5 * 365 * 24 * 60 * 60,
             Some(grant_authority.pubkey()),
+            None,
         )
         .await;
 
