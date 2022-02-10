@@ -19,19 +19,6 @@ pub struct Clawback<'info> {
         has_one = registrar)]
     pub voter: AccountLoader<'info, Voter>,
 
-    // Note: this is accidentally present here, its unused.
-    // FIXME: remove, but ensure that client is ready for it
-    /// The token_owner_record for the voter_authority. This is needed
-    /// to be able to forbid withdraws while the voter is engaged with
-    /// a vote or has an open proposal.
-    ///
-    /// token_owner_record is validated in the instruction:
-    /// - owned by registrar.governance_program_id
-    /// - for the registrar.realm
-    /// - for the registrar.realm_governing_token_mint
-    /// - governing_token_owner is voter_authority
-    pub token_owner_record: UncheckedAccount<'info>,
-
     #[account(
         mut,
         associated_token::authority = voter,
