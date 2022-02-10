@@ -19,6 +19,8 @@ pub struct Clawback<'info> {
         has_one = registrar)]
     pub voter: AccountLoader<'info, Voter>,
 
+    // Note: this is accidentally present here, its unused.
+    // FIXME: remove, but ensure that client is ready for it
     /// The token_owner_record for the voter_authority. This is needed
     /// to be able to forbid withdraws while the voter is engaged with
     /// a vote or has an open proposal.
@@ -68,6 +70,11 @@ pub fn clawback(ctx: Context<Clawback>, deposit_entry_index: u8) -> Result<()> {
         // Load the accounts.
         let registrar = &ctx.accounts.registrar.load()?;
         let voter = &mut ctx.accounts.voter.load_mut()?;
+
+        // Note: don't assert if token_owner_record is engaged in active proposals
+        // since this way a grantee could block clawback
+
+        // Get the deposit being clawed back from.
         let deposit_entry = voter.active_deposit_mut(deposit_entry_index)?;
         require!(
             deposit_entry.allow_clawback,
