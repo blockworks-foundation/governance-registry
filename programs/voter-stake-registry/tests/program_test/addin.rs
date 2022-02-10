@@ -421,7 +421,6 @@ impl AddinCookie {
             &voter_stake_registry::accounts::Clawback {
                 registrar: registrar.address,
                 voter: voter.address,
-                token_owner_record: voter.token_owner_record,
                 vault,
                 destination: token_address,
                 realm_authority: realm_authority.pubkey(),
