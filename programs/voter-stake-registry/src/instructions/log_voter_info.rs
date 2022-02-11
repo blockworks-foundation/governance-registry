@@ -11,23 +11,23 @@ pub struct LogVoterInfo<'info> {
     pub voter: AccountLoader<'info, Voter>,
 }
 
-/// Limit to number of deposit entries logged
-///
-/// Required because we'd hit compute and memory limits otherwise.
-const MAX_DEPOSIT_ENTRIES_OUTPUT: usize = 16;
-
 /// A no-effect instruction that logs information about the voter and deposits.
 ///
 /// Logs deposit information about deposits with an index between `deposit_entry_begin`
-/// and `deposit_entry_begin + MAX_DEPOSIT_ENTRIES_OUTPUT`.
+/// and `deposit_entry_begin + deposit_entry_count`.
 ///
 /// With the current setup, all information about deposits can be logged by calling
-/// this with deposit_entry_begin=0 and =16.
-pub fn log_voter_info(ctx: Context<LogVoterInfo>, deposit_entry_begin: u8) -> Result<()> {
+/// this with deposit_entry_begin=0, =8, =16, =24 and deposit_entry_count=8.
+pub fn log_voter_info(
+    ctx: Context<LogVoterInfo>,
+    deposit_entry_begin: u8,
+    deposit_entry_count: u8,
+) -> Result<()> {
     let registrar = &ctx.accounts.registrar.load()?;
     let voter = ctx.accounts.voter.load()?;
     let curr_ts = registrar.clock_unix_timestamp();
     let deposit_entry_begin = deposit_entry_begin as usize;
+    let deposit_entry_count = deposit_entry_count as usize;
 
     msg!("voter");
     emit!(VoterInfo {
@@ -39,7 +39,7 @@ pub fn log_voter_info(ctx: Context<LogVoterInfo>, deposit_entry_begin: u8) -> Re
     for (deposit_index, deposit) in voter.deposits.iter().enumerate() {
         if !deposit.is_used
             || deposit_index < deposit_entry_begin
-            || deposit_index >= deposit_entry_begin + MAX_DEPOSIT_ENTRIES_OUTPUT
+            || deposit_index >= deposit_entry_begin + deposit_entry_count
         {
             continue;
         }

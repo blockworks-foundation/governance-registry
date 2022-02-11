@@ -746,6 +746,7 @@ impl AddinCookie {
         let data =
             anchor_lang::InstructionData::data(&voter_stake_registry::instruction::LogVoterInfo {
                 deposit_entry_begin,
+                deposit_entry_count: 8,
             });
 
         let accounts = anchor_lang::ToAccountMetas::to_account_metas(
