@@ -44,9 +44,10 @@ pub struct Lockup {
     pub kind: LockupKind,
 
     // Empty bytes for future upgrades.
-    pub padding: [u8; 15],
+    pub reserved: [u8; 15],
 }
 const_assert!(std::mem::size_of::<Lockup>() == 2 * 8 + 1 + 15);
+const_assert!(std::mem::size_of::<Lockup>() % 8 == 0);
 
 impl Default for Lockup {
     fn default() -> Self {
@@ -54,7 +55,7 @@ impl Default for Lockup {
             kind: LockupKind::None,
             start_ts: 0,
             end_ts: 0,
-            padding: [0; 15],
+            reserved: [0; 15],
         }
     }
 }
@@ -81,7 +82,7 @@ impl Lockup {
                         .unwrap(),
                 )
                 .unwrap(),
-            padding: [0; 15],
+            reserved: [0; 15],
         })
     }
 
@@ -753,7 +754,7 @@ mod tests {
             kind: LockupKind::Cliff,
             start_ts,
             end_ts,
-            padding: [0u8; 15],
+            reserved: [0u8; 15],
         };
         let days_left = l.periods_left(curr_ts)?;
         assert_eq!(days_left, t.expected_days_left);
@@ -768,7 +769,7 @@ mod tests {
             kind: LockupKind::Monthly,
             start_ts,
             end_ts,
-            padding: [0u8; 15],
+            reserved: [0u8; 15],
         };
         let months_left = l.periods_left(curr_ts)?;
         assert_eq!(months_left, t.expected_months_left);
@@ -788,9 +789,9 @@ mod tests {
                 start_ts,
                 end_ts,
                 kind: t.kind,
-                padding: [0u8; 15],
+                reserved: [0u8; 15],
             },
-            padding: [0; 13],
+            reserved: [0; 29],
         };
         let curr_ts = start_ts + days_to_secs(t.curr_day);
         let power = d.voting_power_locked(curr_ts, t.amount_deposited, MAX_SECS_LOCKED)?;

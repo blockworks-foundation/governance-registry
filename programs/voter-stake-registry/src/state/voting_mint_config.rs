@@ -31,9 +31,11 @@ pub struct VotingMintConfig {
     pub digit_shift: i8,
 
     // Empty bytes for future upgrades.
-    pub padding: [u8; 31],
+    pub reserved1: [u8; 7],
+    pub reserved2: [u64; 7], // split because `Default` does not support [u8; 63]
 }
-const_assert!(std::mem::size_of::<VotingMintConfig>() == 2 * 32 + 3 * 8 + 1 + 31);
+const_assert!(std::mem::size_of::<VotingMintConfig>() == 2 * 32 + 3 * 8 + 1 + 63);
+const_assert!(std::mem::size_of::<VotingMintConfig>() % 8 == 0);
 
 impl VotingMintConfig {
     /// Converts an amount in this voting mints's native currency

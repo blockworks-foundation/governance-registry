@@ -104,7 +104,8 @@ pub fn configure_voting_mint(
         lockup_scaled_factor,
         lockup_saturation_secs,
         grant_authority: grant_authority.unwrap_or_default(),
-        padding: [0; 31],
+        reserved1: [0; 7],
+        reserved2: [0; 7],
     };
 
     // Check for overflow in vote weight

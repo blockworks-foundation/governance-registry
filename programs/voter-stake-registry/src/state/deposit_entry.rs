@@ -38,9 +38,10 @@ pub struct DepositEntry {
     // Points to the VotingMintConfig this deposit uses.
     pub voting_mint_config_idx: u8,
 
-    pub padding: [u8; 13],
+    pub reserved: [u8; 29],
 }
-const_assert!(std::mem::size_of::<DepositEntry>() == 32 + 2 * 8 + 3 + 13);
+const_assert!(std::mem::size_of::<DepositEntry>() == 32 + 2 * 8 + 3 + 29);
+const_assert!(std::mem::size_of::<DepositEntry>() % 8 == 0);
 
 impl DepositEntry {
     /// # Voting Power Caclulation
@@ -367,7 +368,7 @@ mod tests {
             is_used: true,
             allow_clawback: false,
             voting_mint_config_idx: 0,
-            padding: [0; 13],
+            reserved: [0; 29],
         };
         let initial_deposit = deposit.clone();
         let month = deposit.lockup.kind.period_secs() as i64;
@@ -436,12 +437,12 @@ mod tests {
                 start_ts: lockup_start,
                 end_ts: lockup_start + 2 * day,
                 kind: Daily,
-                padding: [0; 15],
+                reserved: [0; 15],
             },
             is_used: true,
             allow_clawback: false,
             voting_mint_config_idx: 0,
-            padding: [0; 13],
+            reserved: [0; 29],
         };
         let voting_mint_config = VotingMintConfig {
             mint: Pubkey::default(),
@@ -450,7 +451,8 @@ mod tests {
             lockup_scaled_factor: 1_000_000_000,   // 1x
             lockup_saturation_secs: saturation as u64,
             digit_shift: 0,
-            padding: [0; 31],
+            reserved1: [0; 7],
+            reserved2: [0; 7],
         };
 
         let unlocked_vote_weight =

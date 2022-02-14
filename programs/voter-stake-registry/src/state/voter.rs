@@ -12,9 +12,10 @@ pub struct Voter {
     pub deposits: [DepositEntry; 32],
     pub voter_bump: u8,
     pub voter_weight_record_bump: u8,
-    pub padding: [u8; 30],
+    pub reserved: [u8; 94],
 }
-const_assert!(std::mem::size_of::<Voter>() == 2 * 32 + 32 * 64 + 2 + 30);
+const_assert!(std::mem::size_of::<Voter>() == 2 * 32 + 32 * 80 + 2 + 94);
+const_assert!(std::mem::size_of::<Voter>() % 8 == 0);
 
 impl Voter {
     pub fn weight(&self, registrar: &Registrar) -> Result<u64> {
