@@ -3,8 +3,10 @@ use anchor_lang::prelude::*;
 #[event]
 #[derive(Debug)]
 pub struct VoterInfo {
+    /// Voter's total voting power
     pub voting_power: u64,
-    pub voting_power_unlocked_only: u64,
+    /// Voter's total voting power, when ignoring any effects from lockup
+    pub voting_power_baseline: u64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug)]
@@ -34,8 +36,8 @@ pub struct DepositEntryInfo {
     pub unlocked: u64,
     /// Voting power implied by this deposit entry
     pub voting_power: u64,
-    /// Voting power that is not based on lockup
-    pub voting_power_unlocked_only: u64,
+    /// Voting power without any adjustments for lockup
+    pub voting_power_baseline: u64,
     /// Information about locking, if any
     pub locking: Option<LockingInfo>,
 }

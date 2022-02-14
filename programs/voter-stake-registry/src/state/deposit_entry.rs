@@ -52,12 +52,12 @@ impl DepositEntry {
     /// For each cliff-locked token, the vote weight is:
     ///
     /// ```
-    ///    voting_power = unlocked_vote_weight
-    ///                   + lockup_duration_factor * max_lockup_vote_weight
+    ///    voting_power = baseline_vote_weight
+    ///                   + lockup_duration_factor * max_extra_lockup_vote_weight
     /// ```
     ///
     /// with
-    ///    unlocked_vote_weight and max_lockup_vote_weight from the
+    ///    baseline_vote_weight and max_extra_lockup_vote_weight from the
     ///        VotingMintConfig
     ///    lockup_duration_factor = lockup_time_remaining / max_lockup_time
     ///
@@ -90,10 +90,10 @@ impl DepositEntry {
     /// voting_power_linear_vesting() below.
     ///
     pub fn voting_power(&self, voting_mint_config: &VotingMintConfig, curr_ts: i64) -> Result<u64> {
-        let unlocked_vote_weight =
-            voting_mint_config.unlocked_vote_weight(self.amount_deposited_native)?;
+        let baseline_vote_weight =
+            voting_mint_config.baseline_vote_weight(self.amount_deposited_native)?;
         let max_locked_vote_weight =
-            voting_mint_config.max_lockup_vote_weight(self.amount_initially_locked_native)?;
+            voting_mint_config.max_extra_lockup_vote_weight(self.amount_initially_locked_native)?;
         let locked_vote_weight = self.voting_power_locked(
             curr_ts,
             max_locked_vote_weight,
@@ -103,7 +103,7 @@ impl DepositEntry {
             locked_vote_weight <= max_locked_vote_weight,
             InternalErrorBadLockupVoteWeight
         );
-        unlocked_vote_weight
+        baseline_vote_weight
             .checked_add(locked_vote_weight)
             .ok_or(Error::ErrorCode(ErrorCode::VoterWeightOverflow))
     }
@@ -447,19 +447,19 @@ mod tests {
         let voting_mint_config = VotingMintConfig {
             mint: Pubkey::default(),
             grant_authority: Pubkey::default(),
-            unlocked_scaled_factor: 1_000_000_000, // 1x
-            lockup_scaled_factor: 1_000_000_000,   // 1x
+            baseline_vote_weight_scaled_factor: 1_000_000_000, // 1x
+            max_extra_lockup_vote_weight_scaled_factor: 1_000_000_000, // 1x
             lockup_saturation_secs: saturation as u64,
             digit_shift: 0,
             reserved1: [0; 7],
             reserved2: [0; 7],
         };
 
-        let unlocked_vote_weight =
-            voting_mint_config.unlocked_vote_weight(deposit.amount_deposited_native)?;
-        assert_eq!(unlocked_vote_weight, 10_000);
-        let max_locked_vote_weight =
-            voting_mint_config.max_lockup_vote_weight(deposit.amount_initially_locked_native)?;
+        let baseline_vote_weight =
+            voting_mint_config.baseline_vote_weight(deposit.amount_deposited_native)?;
+        assert_eq!(baseline_vote_weight, 10_000);
+        let max_locked_vote_weight = voting_mint_config
+            .max_extra_lockup_vote_weight(deposit.amount_initially_locked_native)?;
         assert_eq!(max_locked_vote_weight, 10_000);
 
         // The timestamp 100_000 is very far before the lockup_start timestamp

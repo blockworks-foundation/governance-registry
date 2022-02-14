@@ -18,6 +18,7 @@ const_assert!(std::mem::size_of::<Voter>() == 2 * 32 + 32 * 80 + 2 + 94);
 const_assert!(std::mem::size_of::<Voter>() % 8 == 0);
 
 impl Voter {
+    /// The full vote weight available to the voter
     pub fn weight(&self, registrar: &Registrar) -> Result<u64> {
         let curr_ts = registrar.clock_unix_timestamp();
         self.deposits
@@ -32,13 +33,14 @@ impl Voter {
             })
     }
 
-    pub fn weight_from_unlocked(&self, registrar: &Registrar) -> Result<u64> {
+    /// The vote weight available to the voter when ignoring any lockup effects
+    pub fn weight_baseline(&self, registrar: &Registrar) -> Result<u64> {
         self.deposits
             .iter()
             .filter(|d| d.is_used)
             .try_fold(0u64, |sum, d| {
                 registrar.voting_mints[d.voting_mint_config_idx as usize]
-                    .unlocked_vote_weight(d.amount_deposited_native)
+                    .baseline_vote_weight(d.amount_deposited_native)
                     .map(|vp| sum.checked_add(vp).unwrap())
             })
     }

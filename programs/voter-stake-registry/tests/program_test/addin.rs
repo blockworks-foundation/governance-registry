@@ -99,8 +99,8 @@ impl AddinCookie {
         index: u16,
         mint: &MintCookie,
         digit_shift: i8,
-        unlocked_scaled_factor: f64,
-        lockup_scaled_factor: f64,
+        baseline_vote_weight_scaled_factor: f64,
+        max_extra_lockup_vote_weight_scaled_factor: f64,
         lockup_saturation_secs: u64,
         grant_authority: Option<Pubkey>,
         other_mints: Option<&[Pubkey]>,
@@ -111,8 +111,10 @@ impl AddinCookie {
             &voter_stake_registry::instruction::ConfigureVotingMint {
                 idx: index,
                 digit_shift,
-                unlocked_scaled_factor: (unlocked_scaled_factor * 1e9) as u64,
-                lockup_scaled_factor: (lockup_scaled_factor * 1e9) as u64,
+                baseline_vote_weight_scaled_factor: (baseline_vote_weight_scaled_factor * 1e9)
+                    as u64,
+                max_extra_lockup_vote_weight_scaled_factor:
+                    (max_extra_lockup_vote_weight_scaled_factor * 1e9) as u64,
                 lockup_saturation_secs,
                 grant_authority,
             },

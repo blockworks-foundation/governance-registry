@@ -23,8 +23,8 @@ pub struct ConfigureVotingMint<'info> {
 ///
 /// * `idx`: index of the rate to be set
 /// * `digit_shift`: how many digits to shift the native token amount, see below
-/// * `unlocked_scaled_factor`: vote weight factor for unlocked deposits, in 1/1e9 units
-/// * `lockup_scaled_factor`: max extra weight for lockups, in 1/1e9 units
+/// * `baseline_vote_weight_scaled_factor`: vote weight factor for all funds in vault, in 1/1e9 units
+/// * `max_extra_lockup_vote_weight_scaled_factor`: max extra weight for lockups, in 1/1e9 units
 /// * `lockup_saturation_secs`: lockup duration at which the full vote weight
 ///   bonus is given to locked up deposits
 ///
@@ -35,8 +35,8 @@ pub struct ConfigureVotingMint<'info> {
 /// ```
 /// vote_weight =
 ///     amount * 10^(digit_shift)
-///            * (unlocked_scaled_factor/1e9
-///               + lockup_duration_factor * lockup_scaled_factor/1e9)
+///            * (baseline_vote_weight_scaled_factor/1e9
+///               + lockup_duration_factor * max_extra_lockup_vote_weight_scaled_factor/1e9)
 /// ```
 /// where lockup_duration_factor is a value between 0 and 1, depending on how long
 /// the amount is locked up. It is 1 when the lockup duration is greater or equal
@@ -46,8 +46,8 @@ pub struct ConfigureVotingMint<'info> {
 /// u64 limit! There is a check based on the supply of all configured mints, but
 /// do your own checking too.
 ///
-/// If you use a single mint, prefer digit_shift=0 and unlocked_scaled_factor +
-/// lockup_scaled_factor <= 1e9. That way you won't have issues with overflow no
+/// If you use a single mint, prefer digit_shift=0 and baseline_vote_weight_scaled_factor +
+/// max_extra_lockup_vote_weight_scaled_factor <= 1e9. That way you won't have issues with overflow no
 /// matter the size of the mint's supply.
 ///
 /// Digit shifting is particularly useful when using several voting token mints
@@ -56,8 +56,8 @@ pub struct ConfigureVotingMint<'info> {
 ///
 /// Example: If you have token A with 6 decimals and token B with 9 decimals, you
 /// could set up:
-///    * A with digit_shift=0,  unlocked_scaled_factor=2e9, lockup_scaled_factor=0
-///    * B with digit_shift=-3, unlocked_scaled_factor=1e9, lockup_scaled_factor=1e9
+///    * A with digit_shift=0,  baseline_vote_weight_scaled_factor=2e9, max_extra_lockup_vote_weight_scaled_factor=0
+///    * B with digit_shift=-3, baseline_vote_weight_scaled_factor=1e9, max_extra_lockup_vote_weight_scaled_factor=1e9
 ///
 /// That would make 1.0 decimaled tokens of A as valuable as 2.0 decimaled tokens
 /// of B when unlocked. B tokens could be locked up to double their vote weight. As
@@ -65,16 +65,16 @@ pub struct ConfigureVotingMint<'info> {
 ///
 /// Note that in this example, you need 1000 native B tokens before receiving 1
 /// unit of vote weight. If the supplies were significantly lower, you could use
-///    * A with digit_shift=3, unlocked_scaled_factor=2e9, lockup_scaled_factor=0
-///    * B with digit_shift=0, unlocked_scaled_factor=1e9, lockup_scaled_factor=1e9
+///    * A with digit_shift=3, baseline_vote_weight_scaled_factor=2e9, max_extra_lockup_vote_weight_scaled_factor=0
+///    * B with digit_shift=0, baseline_vote_weight_scaled_factor=1e9, max_extra_lockup_vote_weight_scaled_factor=1e9
 /// to not lose precision on B tokens.
 ///
 pub fn configure_voting_mint(
     ctx: Context<ConfigureVotingMint>,
     idx: u16,
     digit_shift: i8,
-    unlocked_scaled_factor: u64,
-    lockup_scaled_factor: u64,
+    baseline_vote_weight_scaled_factor: u64,
+    max_extra_lockup_vote_weight_scaled_factor: u64,
     lockup_saturation_secs: u64,
     grant_authority: Option<Pubkey>,
 ) -> Result<()> {
@@ -100,8 +100,8 @@ pub fn configure_voting_mint(
     registrar.voting_mints[idx] = VotingMintConfig {
         mint,
         digit_shift,
-        unlocked_scaled_factor,
-        lockup_scaled_factor,
+        baseline_vote_weight_scaled_factor,
+        max_extra_lockup_vote_weight_scaled_factor,
         lockup_saturation_secs,
         grant_authority: grant_authority.unwrap_or_default(),
         reserved1: [0; 7],

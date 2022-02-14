@@ -18,11 +18,19 @@ pub struct VotingMintConfig {
     /// The authority that is allowed to push grants into voters
     pub grant_authority: Pubkey,
 
-    /// Vote weight factor for unlocked deposits, in 1/SCALED_FACTOR_BASE units.
-    pub unlocked_scaled_factor: u64,
+    /// Vote weight factor for all funds in the account, no matter if locked or not.
+    ///
+    /// In 1/SCALED_FACTOR_BASE units.
+    pub baseline_vote_weight_scaled_factor: u64,
 
-    /// Maximum vote weight factor for lockups, in 1/SCALED_FACTOR_BASE units.
-    pub lockup_scaled_factor: u64,
+    /// Maximum extra vote weight factor for lockups.
+    ///
+    /// This is the extra votes gained for lockups lasting lockup_saturation_secs or
+    /// longer. Shorter lockups receive only a fraction of the maximum extra vote weight,
+    /// based on lockup_time divided by lockup_saturation_secs.
+    ///
+    /// In 1/SCALED_FACTOR_BASE units.
+    pub max_extra_lockup_vote_weight_scaled_factor: u64,
 
     /// Number of seconds of lockup needed to reach the maximum lockup bonus.
     pub lockup_saturation_secs: u64,
@@ -41,7 +49,7 @@ impl VotingMintConfig {
     /// Converts an amount in this voting mints's native currency
     /// to the base vote weight (without the deposit or lockup scalings)
     /// by applying the digit_shift factor.
-    pub fn base_vote_weight(&self, amount_native: u64) -> Result<u64> {
+    fn digit_shift_native(&self, amount_native: u64) -> Result<u64> {
         let compute = || -> Option<u64> {
             let val = if self.digit_shift < 0 {
                 (amount_native as u128).checked_div(10u128.pow((-self.digit_shift) as u32))?
@@ -54,10 +62,10 @@ impl VotingMintConfig {
     }
 
     /// Apply a factor in SCALED_FACTOR_BASE units.
-    fn apply_factor(base_vote_weight: u64, factor: u64) -> Result<u64> {
+    fn apply_factor(base: u64, factor: u64) -> Result<u64> {
         let compute = || -> Option<u64> {
             u64::try_from(
-                (base_vote_weight as u128)
+                (base as u128)
                     .checked_mul(factor as u128)?
                     .checked_div(SCALED_FACTOR_BASE as u128)?,
             )
@@ -67,19 +75,22 @@ impl VotingMintConfig {
     }
 
     /// The vote weight a deposit of a number of native tokens should have.
-    pub fn unlocked_vote_weight(&self, amount_native: u64) -> Result<u64> {
+    ///
+    /// This vote_weight is a component for all funds in a voter account, no
+    /// matter if locked up or not.
+    pub fn baseline_vote_weight(&self, amount_native: u64) -> Result<u64> {
         Self::apply_factor(
-            self.base_vote_weight(amount_native)?,
-            self.unlocked_scaled_factor,
+            self.digit_shift_native(amount_native)?,
+            self.baseline_vote_weight_scaled_factor,
         )
     }
 
-    /// The maximum vote weight a number of locked up native tokens can have.
+    /// The maximum extra vote weight a number of locked up native tokens can have.
     /// Will be multiplied with a factor between 0 and 1 for the lockup duration.
-    pub fn max_lockup_vote_weight(&self, amount_native: u64) -> Result<u64> {
+    pub fn max_extra_lockup_vote_weight(&self, amount_native: u64) -> Result<u64> {
         Self::apply_factor(
-            self.base_vote_weight(amount_native)?,
-            self.lockup_scaled_factor,
+            self.digit_shift_native(amount_native)?,
+            self.max_extra_lockup_vote_weight_scaled_factor,
         )
     }
 
@@ -94,7 +105,8 @@ impl VotingMintConfig {
     /// want to use the grant / vesting / clawback functionality for non-voting
     /// tokens like USDC.
     pub fn grants_vote_weight(&self) -> bool {
-        self.unlocked_scaled_factor > 0 || self.lockup_scaled_factor > 0
+        self.baseline_vote_weight_scaled_factor > 0
+            || self.max_extra_lockup_vote_weight_scaled_factor > 0
     }
 }
 

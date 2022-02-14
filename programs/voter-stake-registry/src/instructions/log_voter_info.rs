@@ -32,7 +32,7 @@ pub fn log_voter_info(
     msg!("voter");
     emit!(VoterInfo {
         voting_power: voter.weight(registrar)?,
-        voting_power_unlocked_only: voter.weight_from_unlocked(registrar)?,
+        voting_power_baseline: voter.weight_baseline(registrar)?,
     });
 
     msg!("deposit_entries");
@@ -71,8 +71,8 @@ pub fn log_voter_info(
             voting_mint_config_index: deposit.voting_mint_config_idx,
             unlocked: deposit.amount_unlocked(curr_ts),
             voting_power: deposit.voting_power(voting_mint_config, curr_ts)?,
-            voting_power_unlocked_only: voting_mint_config
-                .unlocked_vote_weight(deposit.amount_deposited_native)?,
+            voting_power_baseline: voting_mint_config
+                .baseline_vote_weight(deposit.amount_deposited_native)?,
             locking: locking_info,
         });
     }

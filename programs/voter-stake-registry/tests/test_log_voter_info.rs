@@ -137,7 +137,7 @@ async fn test_log_voter_info() -> Result<(), TransportError> {
 
     let voter_event =
         deserialize_event::<voter_stake_registry::events::VoterInfo>(&log[2]).unwrap();
-    assert_eq!(voter_event.voting_power_unlocked_only, 12000);
+    assert_eq!(voter_event.voting_power_baseline, 12000);
     assert_eq!(
         voter_event.voting_power,
         12000 + (1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 + 11) * 1000 / 12
@@ -150,8 +150,8 @@ async fn test_log_voter_info() -> Result<(), TransportError> {
     assert_eq!(deposit_event.unlocked, 1000);
     assert_eq!(deposit_event.voting_power, voter_event.voting_power);
     assert_eq!(
-        deposit_event.voting_power_unlocked_only,
-        voter_event.voting_power_unlocked_only
+        deposit_event.voting_power_baseline,
+        voter_event.voting_power_baseline
     );
     assert!(deposit_event.locking.is_some());
     let locking = deposit_event.locking.unwrap();
