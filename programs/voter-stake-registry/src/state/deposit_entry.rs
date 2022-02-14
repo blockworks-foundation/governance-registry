@@ -57,18 +57,12 @@ impl DepositEntry {
     /// ```
     ///
     /// with
-    ///    baseline_vote_weight and max_extra_lockup_vote_weight from the
-    ///        VotingMintConfig
-    ///    lockup_duration_factor = lockup_time_remaining / max_lockup_time
+    ///   - lockup_duration_factor = min(lockup_time_remaining / lockup_saturation_secs, 1)
+    ///   - the VotingMintConfig providing the values for
+    ///     baseline_vote_weight, max_extra_lockup_vote_weight, lockup_saturation_secs
     ///
     /// Linear vesting schedules can be thought of as a sequence of cliff-
     /// locked tokens and have the matching voting weight.
-    ///
-    /// To achieve this with the SPL governance program--which requires a "max
-    /// vote weight"--we attach what amounts to a scalar multiplier between 0
-    /// and 1 to normalize voting power. This multiplier is a function of
-    /// the lockup schedule. Here we will describe two, a one time
-    /// cliff and a linear vesting schedule unlocking daily.
     ///
     /// ## Cliff Lockup
     ///
