@@ -1,0 +1,16 @@
+[package]
+name = "voter-stake-registry-cli"
+version = "0.2.0"
+edition = "2021"
+
+[dependencies]
+voter-stake-registry = { path = "../programs/voter-stake-registry", features = ["no-entrypoint"] }
+
+anchor-lang = "0.20.1"
+
+serde = "^1.0"
+serde_json = "^1.0"
+log = "0.4.14"
+base64 = "0.13.0"
+anyhow = "1.0.55"
+clap = { version = "3.1.2", features = ["derive"] }
