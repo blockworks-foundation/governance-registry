@@ -15,8 +15,13 @@ use voter_stake_registry::state::*;
 struct DisplayDepositEntry {
     allow_clawback: bool,
     mint_index: u8,
-    unlocked: u64,
-    locked: u64,
+    unlocked_now: u64,
+    locked_now: u64,
+    locked_1y: u64,
+    locked_2y: u64,
+    locked_3y: u64,
+    locked_4y: u64,
+    locked_5y: u64,
 }
 
 #[derive(Serialize)]
@@ -33,6 +38,7 @@ fn decode_voter(data: &[u8]) -> Result<()> {
     let now_ts = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)?
         .as_secs() as i64;
+    let year = 365 * 24 * 60 * 60;
     let ser = DisplayVoter {
         voter_authority: voter.voter_authority.to_string(),
         registrar: voter.registrar.to_string(),
@@ -43,8 +49,13 @@ fn decode_voter(data: &[u8]) -> Result<()> {
             .map(|d| DisplayDepositEntry {
                 allow_clawback: d.allow_clawback,
                 mint_index: d.voting_mint_config_idx,
-                unlocked: d.amount_unlocked(now_ts),
-                locked: d.amount_locked(now_ts),
+                unlocked_now: d.amount_unlocked(now_ts),
+                locked_now: d.amount_locked(now_ts),
+                locked_1y: d.amount_locked(now_ts + year),
+                locked_2y: d.amount_locked(now_ts + 2 * year),
+                locked_3y: d.amount_locked(now_ts + 3 * year),
+                locked_4y: d.amount_locked(now_ts + 4 * year),
+                locked_5y: d.amount_locked(now_ts + 5 * year),
             })
             .collect(),
     };
