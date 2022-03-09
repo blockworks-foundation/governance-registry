@@ -113,4 +113,7 @@ pub enum ErrorCode {
     // 6036 / 0x1794
     #[msg("")]
     VaultTokenNonZero,
+    // 6037 / 0x1795
+    #[msg("")]
+    InvalidTimestampArguments,
 }

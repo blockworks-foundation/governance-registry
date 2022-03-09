@@ -45,6 +45,32 @@ impl Voter {
             })
     }
 
+    /// The extra lockup vote weight that the user is guaranteed to have at `at_ts`, assuming
+    /// they withdraw and unlock as much as possible starting from `curr_ts`.
+    pub fn weight_locked_guaranteed(
+        &self,
+        registrar: &Registrar,
+        curr_ts: i64,
+        at_ts: i64,
+    ) -> Result<u64> {
+        require!(at_ts >= curr_ts, InvalidTimestampArguments);
+        self.deposits
+            .iter()
+            .filter(|d| d.is_used)
+            .try_fold(0u64, |sum, d| {
+                let mint_config = &registrar.voting_mints[d.voting_mint_config_idx as usize];
+                let max_locked_vote_weight =
+                    mint_config.max_extra_lockup_vote_weight(d.amount_initially_locked_native)?;
+                let amount = d.voting_power_locked_guaranteed(
+                    curr_ts,
+                    at_ts,
+                    max_locked_vote_weight,
+                    mint_config.lockup_saturation_secs,
+                )?;
+                Ok(sum.checked_add(amount).unwrap())
+            })
+    }
+
     pub fn active_deposit_mut(&mut self, index: u8) -> Result<&mut DepositEntry> {
         let index = index as usize;
         require!(index < self.deposits.len(), OutOfBoundsDepositEntryIndex);
