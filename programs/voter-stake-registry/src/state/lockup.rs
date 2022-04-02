@@ -21,8 +21,8 @@ pub const SECS_PER_MONTH: u64 = 365 * SECS_PER_DAY / 12;
 /// that would be 36500^2 * SECS_PER_MONTH << 2^64.
 ///
 /// This setting limits the maximum lockup duration for lockup methods
-/// with daily periods to 100 years.
-pub const MAX_LOCKUP_PERIODS: u32 = 365 * 100;
+/// with daily periods to 200 years.
+pub const MAX_LOCKUP_PERIODS: u32 = 365 * 200;
 
 pub const MAX_LOCKUP_IN_FUTURE_SECS: i64 = 100 * 365 * 24 * 60 * 60;
 
