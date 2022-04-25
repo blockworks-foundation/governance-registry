@@ -18,7 +18,7 @@ use spl_token::*;
 pub struct SolanaCookie {
     pub context: RefCell<ProgramTestContext>,
     pub rent: Rent,
-    pub program_log: Arc<RwLock<Vec<String>>>,
+    pub program_output: Arc<RwLock<super::ProgramOutput>>,
 }
 
 impl SolanaCookie {
@@ -28,7 +28,7 @@ impl SolanaCookie {
         instructions: &[Instruction],
         signers: Option<&[&Keypair]>,
     ) -> Result<(), TransportError> {
-        self.program_log.write().unwrap().clear();
+        *self.program_output.write().unwrap() = super::ProgramOutput::default();
 
         let mut context = self.context.borrow_mut();
 
@@ -127,7 +127,7 @@ impl SolanaCookie {
     }
 
     #[allow(dead_code)]
-    pub fn program_log(&self) -> Vec<String> {
-        self.program_log.read().unwrap().clone()
+    pub fn program_output(&self) -> super::ProgramOutput {
+        self.program_output.read().unwrap().clone()
     }
 }

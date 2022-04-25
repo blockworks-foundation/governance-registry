@@ -7,22 +7,13 @@ use std::convert::TryFrom;
 use std::mem::size_of;
 
 #[derive(Accounts)]
-#[instruction(
-    voter_bump: u8,
-    voter_weight_record_bump: u8,
-    kind: LockupKind,
-    start_ts: Option<u64>,
-    periods: u32,
-    allow_clawback: bool,
-    amount: u64,
-)]
 pub struct Grant<'info> {
     pub registrar: AccountLoader<'info, Registrar>,
 
     #[account(
         init_if_needed,
         seeds = [registrar.key().as_ref(), b"voter".as_ref(), voter_authority.key().as_ref()],
-        bump = voter_bump,
+        bump,
         payer = payer,
         space = 8 + size_of::<Voter>(),
     )]
@@ -37,7 +28,7 @@ pub struct Grant<'info> {
     #[account(
         init_if_needed,
         seeds = [registrar.key().as_ref(), b"voter-weight-record".as_ref(), voter_authority.key().as_ref()],
-        bump = voter_weight_record_bump,
+        bump,
         payer = payer,
         space = size_of::<VoterWeightRecord>(),
     )]
@@ -130,7 +121,7 @@ pub fn grant(
         grant_authority == registrar.realm_authority
             || grant_authority == mint_config.grant_authority
             || grant_authority == voter_authority,
-        InvalidAuthority
+        VsrError::InvalidAuthority
     );
 
     // Init the voter if it hasn't been already.
@@ -162,7 +153,7 @@ pub fn grant(
         .deposits
         .iter()
         .position(|d_entry| !d_entry.is_used)
-        .ok_or(ErrorCode::DepositEntryFull)?;
+        .ok_or(VsrError::DepositEntryFull)?;
     let d_entry = &mut voter.deposits[free_entry_idx];
 
     let curr_ts = registrar.clock_unix_timestamp();

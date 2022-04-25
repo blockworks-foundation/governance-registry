@@ -19,8 +19,8 @@ test-bpf = []
 
 [dependencies]
 # a) for deployment use these
-anchor-lang = "0.20.1"
-anchor-spl = { version = "0.20.1" }
+anchor-lang = { version = "0.24.2", features = ["init-if-needed"] }
+anchor-spl = { version = "0.24.2" }
 # b) while testing, use below dependencies for debugging instead of above ones
 # anchor-lang = { git = "https://github.com/microwavedcola1/anchor.git", branch = "master-debug" }
 # anchor-spl = { git = "https://github.com/microwavedcola1/anchor.git", branch = "master-debug", features = ["governance"]}

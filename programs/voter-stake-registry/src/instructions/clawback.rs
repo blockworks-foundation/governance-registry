@@ -65,7 +65,7 @@ pub fn clawback(ctx: Context<Clawback>, deposit_entry_index: u8) -> Result<()> {
         let deposit_entry = voter.active_deposit_mut(deposit_entry_index)?;
         require!(
             deposit_entry.allow_clawback,
-            ErrorCode::ClawbackNotAllowedOnDeposit
+            VsrError::ClawbackNotAllowedOnDeposit
         );
 
         let curr_ts = registrar.clock_unix_timestamp();
@@ -74,7 +74,7 @@ pub fn clawback(ctx: Context<Clawback>, deposit_entry_index: u8) -> Result<()> {
         // Update deposit book keeping.
         require!(
             locked_amount <= deposit_entry.amount_deposited_native,
-            InternalProgramError
+            VsrError::InternalProgramError
         );
         deposit_entry.amount_deposited_native -= locked_amount;
 

@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
-#[error]
-pub enum ErrorCode {
+#[error_code]
+pub enum VsrError {
     // 6000 / 0x1770
     #[msg("Exchange rate must be greater than zero")]
     InvalidRate,

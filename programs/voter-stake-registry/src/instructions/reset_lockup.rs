@@ -37,15 +37,18 @@ pub fn reset_lockup(
     require!(
         (periods as u64).checked_mul(kind.period_secs()).unwrap()
             >= source.lockup.seconds_left(curr_ts),
-        InvalidLockupPeriod
+        VsrError::InvalidLockupPeriod
     );
     require!(
         kind.strictness() >= source.lockup.kind.strictness(),
-        InvalidLockupKind
+        VsrError::InvalidLockupKind
     );
 
     // Don't re-lock clawback deposits. Users must withdraw and create a new one.
-    require!(!source.allow_clawback, InvalidChangeToClawbackDepositEntry);
+    require!(
+        !source.allow_clawback,
+        VsrError::InvalidChangeToClawbackDepositEntry
+    );
 
     // Change the deposit entry.
     let d_entry = voter.active_deposit_mut(deposit_entry_index)?;

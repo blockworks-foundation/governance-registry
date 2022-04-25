@@ -75,7 +75,7 @@ pub fn deposit(ctx: Context<Deposit>, deposit_entry_index: u8, amount: u64) -> R
     let mint_idx = registrar.voting_mint_config_index(ctx.accounts.deposit_token.mint)?;
     require!(
         mint_idx == d_entry.voting_mint_config_idx as usize,
-        InvalidMint
+        VsrError::InvalidMint
     );
 
     // Adding funds to a lockup that is already in progress can be complicated

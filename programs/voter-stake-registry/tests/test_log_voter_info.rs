@@ -109,12 +109,11 @@ async fn test_log_voter_info() -> Result<(), TransportError> {
     context.solana.advance_clock_by_slots(2).await;
 
     addin.log_voter_info(&registrar, &voter, 0).await;
-    let log = context.solana.program_log();
-    assert_eq!(log[1], "voter");
-    assert_eq!(log[3], "deposit_entries");
+    let data_log = context.solana.program_output().data;
+    assert_eq!(data_log.len(), 2);
 
     let voter_event =
-        deserialize_event::<voter_stake_registry::events::VoterInfo>(&log[2]).unwrap();
+        deserialize_event::<voter_stake_registry::events::VoterInfo>(&data_log[0]).unwrap();
     assert_eq!(voter_event.voting_power_baseline, 12000);
     assert_eq!(
         voter_event.voting_power,
@@ -122,7 +121,7 @@ async fn test_log_voter_info() -> Result<(), TransportError> {
     );
 
     let deposit_event =
-        deserialize_event::<voter_stake_registry::events::DepositEntryInfo>(&log[4]).unwrap();
+        deserialize_event::<voter_stake_registry::events::DepositEntryInfo>(&data_log[1]).unwrap();
     assert_eq!(deposit_event.deposit_entry_index, 0);
     assert_eq!(deposit_event.voting_mint_config_index, 0);
     assert_eq!(deposit_event.unlocked, 1000);

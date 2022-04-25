@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use error::*;
 use instructions::*;
 use state::*;
 

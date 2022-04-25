@@ -95,11 +95,11 @@ impl DepositEntry {
         )?;
         require!(
             locked_vote_weight <= max_locked_vote_weight,
-            InternalErrorBadLockupVoteWeight
+            VsrError::InternalErrorBadLockupVoteWeight
         );
         baseline_vote_weight
             .checked_add(locked_vote_weight)
-            .ok_or(Error::ErrorCode(ErrorCode::VoterWeightOverflow))
+            .ok_or_else(|| error!(VsrError::VoterWeightOverflow))
     }
 
     /// Vote power contribution from locked funds only.
@@ -364,14 +364,14 @@ impl DepositEntry {
         let vested_amount = self.vested(curr_ts)?;
         require!(
             vested_amount <= self.amount_initially_locked_native,
-            InternalProgramError
+            VsrError::InternalProgramError
         );
         self.amount_initially_locked_native = self
             .amount_initially_locked_native
             .checked_sub(vested_amount)
             .unwrap();
         self.lockup.remove_past_periods(curr_ts)?;
-        require!(self.vested(curr_ts)? == 0, InternalProgramError);
+        require!(self.vested(curr_ts)? == 0, VsrError::InternalProgramError);
         Ok(())
     }
 }

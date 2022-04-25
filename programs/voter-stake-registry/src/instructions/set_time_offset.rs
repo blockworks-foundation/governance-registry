@@ -17,7 +17,7 @@ pub fn set_time_offset(ctx: Context<SetTimeOffset>, time_offset: i64) -> Result<
     let registrar = &mut ctx.accounts.registrar.load_mut()?;
     require!(
         registrar.governance_program_id == allowed_program,
-        ErrorCode::DebugInstruction
+        VsrError::DebugInstruction
     );
     registrar.time_offset = time_offset;
     Ok(())

@@ -49,12 +49,15 @@ pub fn internal_transfer_locked(
 
     // Allowing transfers from clawback-enabled deposits could be used to avoid
     // clawback by making proposal instructions target the wrong entry index.
-    require!(!source.allow_clawback, InvalidChangeToClawbackDepositEntry);
+    require!(
+        !source.allow_clawback,
+        VsrError::InvalidChangeToClawbackDepositEntry
+    );
 
     // Reduce source amounts
     require!(
         amount <= source.amount_initially_locked_native,
-        InsufficientLockedTokens
+        VsrError::InsufficientLockedTokens
     );
     source.amount_deposited_native = source.amount_deposited_native.checked_sub(amount).unwrap();
     source.amount_initially_locked_native =
@@ -65,15 +68,15 @@ pub fn internal_transfer_locked(
     target.resolve_vesting(curr_ts)?;
     require!(
         target.voting_mint_config_idx == source_mint_idx,
-        InvalidMint
+        VsrError::InvalidMint
     );
     require!(
         target.lockup.seconds_left(curr_ts) >= source_seconds_left,
-        InvalidLockupPeriod
+        VsrError::InvalidLockupPeriod
     );
     require!(
         target.lockup.kind.strictness() >= source_strictness,
-        InvalidLockupKind
+        VsrError::InvalidLockupKind
     );
 
     // Add target amounts

@@ -1,4 +1,3 @@
-use crate::error::*;
 use crate::events::*;
 use crate::state::*;
 use anchor_lang::prelude::*;

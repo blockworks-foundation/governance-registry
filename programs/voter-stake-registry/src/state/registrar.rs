@@ -39,7 +39,7 @@ impl Registrar {
         self.voting_mints
             .iter()
             .position(|r| r.mint == mint)
-            .ok_or(Error::ErrorCode(ErrorCode::VotingMintNotFound))
+            .ok_or_else(|| error!(VsrError::VotingMintNotFound))
     }
 
     pub fn max_vote_weight(&self, mint_accounts: &[AccountInfo]) -> Result<u64> {
@@ -52,14 +52,14 @@ impl Registrar {
                 let mint_account = mint_accounts
                     .iter()
                     .find(|a| a.key() == voting_mint_config.mint)
-                    .ok_or(Error::ErrorCode(ErrorCode::VotingMintNotFound))?;
+                    .ok_or_else(|| error!(VsrError::VotingMintNotFound))?;
                 let mint = Account::<Mint>::try_from(mint_account)?;
                 sum = sum
                     .checked_add(voting_mint_config.baseline_vote_weight(mint.supply)?)
-                    .ok_or(Error::ErrorCode(ErrorCode::VoterWeightOverflow))?;
+                    .ok_or_else(|| error!(VsrError::VoterWeightOverflow))?;
                 sum = sum
                     .checked_add(voting_mint_config.max_extra_lockup_vote_weight(mint.supply)?)
-                    .ok_or(Error::ErrorCode(ErrorCode::VoterWeightOverflow))?;
+                    .ok_or_else(|| error!(VsrError::VoterWeightOverflow))?;
                 Ok(sum)
             })
     }

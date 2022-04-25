@@ -41,7 +41,7 @@ pub fn internal_transfer_unlocked(
     // Reduce source amounts
     require!(
         amount <= source.amount_unlocked(curr_ts),
-        InsufficientUnlockedTokens
+        VsrError::InsufficientUnlockedTokens
     );
     source.amount_deposited_native = source.amount_deposited_native.checked_sub(amount).unwrap();
 
@@ -49,7 +49,7 @@ pub fn internal_transfer_unlocked(
     let target = voter.active_deposit_mut(target_deposit_entry_index)?;
     require!(
         target.voting_mint_config_idx == source_mint_idx,
-        InvalidMint
+        VsrError::InvalidMint
     );
 
     // Add target amounts

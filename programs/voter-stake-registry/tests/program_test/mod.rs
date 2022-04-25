@@ -46,9 +46,14 @@ impl AddPacked for ProgramTest {
     }
 }
 
+#[derive(Default, Clone)]
+pub struct ProgramOutput {
+    pub logs: Vec<String>,
+    pub data: Vec<String>,
+}
 struct LoggerWrapper {
     inner: env_logger::Logger,
-    program_log: Arc<RwLock<Vec<String>>>,
+    output: Arc<RwLock<ProgramOutput>>,
 }
 
 impl Log for LoggerWrapper {
@@ -63,7 +68,9 @@ impl Log for LoggerWrapper {
         {
             let msg = record.args().to_string();
             if let Some(data) = msg.strip_prefix("Program log: ") {
-                self.program_log.write().unwrap().push(data.into());
+                self.output.write().unwrap().logs.push(data.into());
+            } else if let Some(data) = msg.strip_prefix("Program data: ") {
+                self.output.write().unwrap().data.push(data.into());
             }
         }
         self.inner.log(record);
@@ -92,10 +99,10 @@ impl TestContext {
             env_logger::Builder::from_env(env_logger::Env::new().default_filter_or(log_filter))
                 .format_timestamp_nanos()
                 .build();
-        let program_log_capture = Arc::new(RwLock::new(vec![]));
+        let program_output = Arc::new(RwLock::new(ProgramOutput::default()));
         let _ = log::set_boxed_logger(Box::new(LoggerWrapper {
             inner: env_logger,
-            program_log: program_log_capture.clone(),
+            output: program_output.clone(),
         }));
 
         let addin_program_id = voter_stake_registry::id();
@@ -209,7 +216,7 @@ impl TestContext {
         let solana = Arc::new(SolanaCookie {
             context: RefCell::new(context),
             rent,
-            program_log: program_log_capture.clone(),
+            program_output: program_output.clone(),
         });
 
         TestContext {

@@ -58,7 +58,7 @@ impl VotingMintConfig {
             };
             u64::try_from(val).ok()
         };
-        compute().ok_or(Error::ErrorCode(ErrorCode::VoterWeightOverflow))
+        compute().ok_or_else(|| error!(VsrError::VoterWeightOverflow))
     }
 
     /// Apply a factor in SCALED_FACTOR_BASE units.
@@ -71,7 +71,7 @@ impl VotingMintConfig {
             )
             .ok()
         };
-        compute().ok_or(Error::ErrorCode(ErrorCode::VoterWeightOverflow))
+        compute().ok_or_else(|| error!(VsrError::VoterWeightOverflow))
     }
 
     /// The vote weight a deposit of a number of native tokens should have.

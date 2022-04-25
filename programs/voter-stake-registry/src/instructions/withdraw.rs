@@ -105,17 +105,17 @@ pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) ->
     let deposit_entry = voter.active_deposit_mut(deposit_entry_index)?;
     require!(
         deposit_entry.amount_unlocked(curr_ts) >= amount,
-        InsufficientUnlockedTokens
+        VsrError::InsufficientUnlockedTokens
     );
     require!(
         mint_idx == deposit_entry.voting_mint_config_idx as usize,
-        ErrorCode::InvalidMint
+        VsrError::InvalidMint
     );
 
     // Bookkeeping for withdrawn funds.
     require!(
         amount <= deposit_entry.amount_deposited_native,
-        InternalProgramError
+        VsrError::InternalProgramError
     );
     deposit_entry.amount_deposited_native = deposit_entry
         .amount_deposited_native

@@ -74,10 +74,10 @@ pub fn create_deposit_entry(
     // Get and set up the deposit entry.
     require!(
         voter.deposits.len() > deposit_entry_index as usize,
-        OutOfBoundsDepositEntryIndex
+        VsrError::OutOfBoundsDepositEntryIndex
     );
     let d_entry = &mut voter.deposits[deposit_entry_index as usize];
-    require!(!d_entry.is_used, UnusedDepositEntryIndex);
+    require!(!d_entry.is_used, VsrError::UnusedDepositEntryIndex);
 
     let curr_ts = registrar.clock_unix_timestamp();
     let start_ts = if let Some(v) = start_ts {

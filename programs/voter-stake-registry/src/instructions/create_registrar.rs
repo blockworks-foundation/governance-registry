@@ -6,14 +6,13 @@ use spl_governance::state::realm;
 use std::mem::size_of;
 
 #[derive(Accounts)]
-#[instruction(registrar_bump: u8)]
 pub struct CreateRegistrar<'info> {
     /// The voting registrar. There can only be a single registrar
     /// per governance realm and governing mint.
     #[account(
         init,
         seeds = [realm.key().as_ref(), b"registrar".as_ref(), realm_governing_token_mint.key().as_ref()],
-        bump = registrar_bump,
+        bump,
         payer = payer,
         space = 8 + size_of::<Registrar>()
     )]
@@ -65,7 +64,7 @@ pub fn create_registrar(ctx: Context<CreateRegistrar>, registrar_bump: u8) -> Re
     )?;
     require!(
         realm.authority.unwrap() == ctx.accounts.realm_authority.key(),
-        ErrorCode::InvalidRealmAuthority
+        VsrError::InvalidRealmAuthority
     );
 
     Ok(())

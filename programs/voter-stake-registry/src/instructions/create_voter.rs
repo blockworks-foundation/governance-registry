@@ -5,14 +5,13 @@ use anchor_lang::solana_program::sysvar::instructions as tx_instructions;
 use std::mem::size_of;
 
 #[derive(Accounts)]
-#[instruction(voter_bump: u8, voter_weight_record_bump: u8)]
 pub struct CreateVoter<'info> {
     pub registrar: AccountLoader<'info, Registrar>,
 
     #[account(
         init,
         seeds = [registrar.key().as_ref(), b"voter".as_ref(), voter_authority.key().as_ref()],
-        bump = voter_bump,
+        bump,
         payer = payer,
         space = 8 + size_of::<Voter>(),
     )]
@@ -28,7 +27,7 @@ pub struct CreateVoter<'info> {
     #[account(
         init,
         seeds = [registrar.key().as_ref(), b"voter-weight-record".as_ref(), voter_authority.key().as_ref()],
-        bump = voter_weight_record_bump,
+        bump,
         payer = payer,
         space = size_of::<VoterWeightRecord>(),
     )]
@@ -63,7 +62,7 @@ pub fn create_voter(
         let current_ixn = tx_instructions::load_instruction_at_checked(current_index, &ixns)?;
         require!(
             current_ixn.program_id == *ctx.program_id,
-            ErrorCode::ForbiddenCpi
+            VsrError::ForbiddenCpi
         );
     }
 

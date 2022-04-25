@@ -78,22 +78,28 @@ pub fn configure_voting_mint(
     lockup_saturation_secs: u64,
     grant_authority: Option<Pubkey>,
 ) -> Result<()> {
-    require!(lockup_saturation_secs > 0, LockupSaturationMustBePositive);
+    require!(
+        lockup_saturation_secs > 0,
+        VsrError::LockupSaturationMustBePositive
+    );
     let registrar = &mut ctx.accounts.registrar.load_mut()?;
     let mint = ctx.accounts.mint.key();
     let idx = idx as usize;
     require!(
         idx < registrar.voting_mints.len(),
-        OutOfBoundsVotingMintConfigIndex
+        VsrError::OutOfBoundsVotingMintConfigIndex
     );
 
     // Either it's reconfiguring an existing mint with the correct index,
     // or configuring a new mint on an unused index.
     match registrar.voting_mint_config_index(mint) {
-        Ok(existing_idx) => require!(existing_idx == idx, VotingMintConfiguredWithDifferentIndex),
+        Ok(existing_idx) => require!(
+            existing_idx == idx,
+            VsrError::VotingMintConfiguredWithDifferentIndex
+        ),
         Err(_) => require!(
             !registrar.voting_mints[idx].in_use(),
-            VotingMintConfigIndexAlreadyInUse
+            VsrError::VotingMintConfigIndexAlreadyInUse
         ),
     };
 
