@@ -67,6 +67,12 @@ pub fn create_voter(
         );
     }
 
+    require_eq!(voter_bump, *ctx.bumps.get("voter").unwrap());
+    require_eq!(
+        voter_weight_record_bump,
+        *ctx.bumps.get("voter_weight_record").unwrap()
+    );
+
     // Load accounts.
     let registrar = &ctx.accounts.registrar.load()?;
     let voter_authority = ctx.accounts.voter_authority.key();

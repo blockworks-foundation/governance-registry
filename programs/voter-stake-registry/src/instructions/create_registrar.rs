@@ -48,6 +48,7 @@ pub struct CreateRegistrar<'info> {
 /// used for voting.
 pub fn create_registrar(ctx: Context<CreateRegistrar>, registrar_bump: u8) -> Result<()> {
     let registrar = &mut ctx.accounts.registrar.load_init()?;
+    require_eq!(registrar_bump, *ctx.bumps.get("registrar").unwrap());
     registrar.bump = registrar_bump;
     registrar.governance_program_id = ctx.accounts.governance_program_id.key();
     registrar.realm = ctx.accounts.realm.key();
