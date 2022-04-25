@@ -72,8 +72,9 @@ pub fn clawback(ctx: Context<Clawback>, deposit_entry_index: u8) -> Result<()> {
         let locked_amount = deposit_entry.amount_locked(curr_ts);
 
         // Update deposit book keeping.
-        require!(
-            locked_amount <= deposit_entry.amount_deposited_native,
+        require_gte!(
+            deposit_entry.amount_deposited_native,
+            locked_amount,
             VsrError::InternalProgramError
         );
         deposit_entry.amount_deposited_native -= locked_amount;

@@ -55,8 +55,9 @@ pub fn internal_transfer_locked(
     );
 
     // Reduce source amounts
-    require!(
-        amount <= source.amount_initially_locked_native,
+    require_gte!(
+        source.amount_initially_locked_native,
+        amount,
         VsrError::InsufficientLockedTokens
     );
     source.amount_deposited_native = source.amount_deposited_native.checked_sub(amount).unwrap();
@@ -66,16 +67,19 @@ pub fn internal_transfer_locked(
     // Check target compatibility
     let target = voter.active_deposit_mut(target_deposit_entry_index)?;
     target.resolve_vesting(curr_ts)?;
-    require!(
-        target.voting_mint_config_idx == source_mint_idx,
+    require_eq!(
+        target.voting_mint_config_idx,
+        source_mint_idx,
         VsrError::InvalidMint
     );
-    require!(
-        target.lockup.seconds_left(curr_ts) >= source_seconds_left,
+    require_gte!(
+        target.lockup.seconds_left(curr_ts),
+        source_seconds_left,
         VsrError::InvalidLockupPeriod
     );
-    require!(
-        target.lockup.kind.strictness() >= source_strictness,
+    require_gte!(
+        target.lockup.kind.strictness(),
+        source_strictness,
         VsrError::InvalidLockupKind
     );
 

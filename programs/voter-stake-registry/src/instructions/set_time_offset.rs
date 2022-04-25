@@ -15,8 +15,9 @@ pub struct SetTimeOffset<'info> {
 pub fn set_time_offset(ctx: Context<SetTimeOffset>, time_offset: i64) -> Result<()> {
     let allowed_program = Pubkey::from_str("GovernanceProgramTest1111111111111111111111").unwrap();
     let registrar = &mut ctx.accounts.registrar.load_mut()?;
-    require!(
-        registrar.governance_program_id == allowed_program,
+    require_keys_eq!(
+        registrar.governance_program_id,
+        allowed_program,
         VsrError::DebugInstruction
     );
     registrar.time_offset = time_offset;

@@ -34,13 +34,14 @@ pub fn reset_lockup(
     let source = voter.active_deposit_mut(deposit_entry_index)?;
 
     // Must not decrease duration or strictness
-    require!(
-        (periods as u64).checked_mul(kind.period_secs()).unwrap()
-            >= source.lockup.seconds_left(curr_ts),
+    require_gte!(
+        (periods as u64).checked_mul(kind.period_secs()).unwrap(),
+        source.lockup.seconds_left(curr_ts),
         VsrError::InvalidLockupPeriod
     );
-    require!(
-        kind.strictness() >= source.lockup.kind.strictness(),
+    require_gte!(
+        kind.strictness(),
+        source.lockup.kind.strictness(),
         VsrError::InvalidLockupKind
     );
 

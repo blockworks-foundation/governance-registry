@@ -73,8 +73,9 @@ pub fn deposit(ctx: Context<Deposit>, deposit_entry_index: u8, amount: u64) -> R
 
     // Get the exchange rate entry associated with this deposit.
     let mint_idx = registrar.voting_mint_config_index(ctx.accounts.deposit_token.mint)?;
-    require!(
-        mint_idx == d_entry.voting_mint_config_idx as usize,
+    require_eq!(
+        mint_idx,
+        d_entry.voting_mint_config_idx as usize,
         VsrError::InvalidMint
     );
 

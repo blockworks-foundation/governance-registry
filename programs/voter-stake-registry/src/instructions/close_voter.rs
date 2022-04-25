@@ -43,16 +43,17 @@ pub fn close_voter<'key, 'accounts, 'remaining, 'info>(
         let amount = voter.deposits.iter().fold(0u64, |sum, d| {
             sum.checked_add(d.amount_deposited_native).unwrap()
         });
-        require!(amount == 0, VsrError::VotingTokenNonZero);
+        require_eq!(amount, 0, VsrError::VotingTokenNonZero);
 
         let voter_seeds = voter_seeds!(voter);
         for account in &mut ctx.remaining_accounts.iter() {
             let token = Account::<TokenAccount>::try_from(&account.clone()).unwrap();
-            require!(
-                token.owner == ctx.accounts.voter.key(),
+            require_keys_eq!(
+                token.owner,
+                ctx.accounts.voter.key(),
                 VsrError::InvalidAuthority
             );
-            require!(token.amount == 0, VsrError::VaultTokenNonZero);
+            require_eq!(token.amount, 0, VsrError::VaultTokenNonZero);
 
             let cpi_accounts = CloseAccount {
                 account: account.to_account_info(),

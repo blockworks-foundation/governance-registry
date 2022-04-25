@@ -103,18 +103,21 @@ pub fn withdraw(ctx: Context<Withdraw>, deposit_entry_index: u8, amount: u64) ->
     // Get the deposit being withdrawn from.
     let curr_ts = registrar.clock_unix_timestamp();
     let deposit_entry = voter.active_deposit_mut(deposit_entry_index)?;
-    require!(
-        deposit_entry.amount_unlocked(curr_ts) >= amount,
+    require_gte!(
+        deposit_entry.amount_unlocked(curr_ts),
+        amount,
         VsrError::InsufficientUnlockedTokens
     );
-    require!(
-        mint_idx == deposit_entry.voting_mint_config_idx as usize,
+    require_eq!(
+        mint_idx,
+        deposit_entry.voting_mint_config_idx as usize,
         VsrError::InvalidMint
     );
 
     // Bookkeeping for withdrawn funds.
-    require!(
-        amount <= deposit_entry.amount_deposited_native,
+    require_gte!(
+        deposit_entry.amount_deposited_native,
+        amount,
         VsrError::InternalProgramError
     );
     deposit_entry.amount_deposited_native = deposit_entry

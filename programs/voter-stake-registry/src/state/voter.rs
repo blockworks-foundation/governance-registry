@@ -53,7 +53,7 @@ impl Voter {
         curr_ts: i64,
         at_ts: i64,
     ) -> Result<u64> {
-        require!(at_ts >= curr_ts, VsrError::InvalidTimestampArguments);
+        require_gte!(at_ts, curr_ts, VsrError::InvalidTimestampArguments);
         self.deposits
             .iter()
             .filter(|d| d.is_used)
@@ -73,8 +73,9 @@ impl Voter {
 
     pub fn active_deposit_mut(&mut self, index: u8) -> Result<&mut DepositEntry> {
         let index = index as usize;
-        require!(
-            index < self.deposits.len(),
+        require_gt!(
+            self.deposits.len(),
+            index,
             VsrError::OutOfBoundsDepositEntryIndex
         );
         let d = &mut self.deposits[index];
@@ -93,8 +94,9 @@ impl Voter {
             &registrar.realm,
             &registrar.realm_governing_token_mint,
         )?;
-        require!(
-            record.governing_token_owner == self.voter_authority,
+        require_keys_eq!(
+            record.governing_token_owner,
+            self.voter_authority,
             VsrError::InvalidTokenOwnerRecord
         );
         Ok(record)

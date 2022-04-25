@@ -72,8 +72,9 @@ pub fn create_deposit_entry(
     let mint_idx = registrar.voting_mint_config_index(ctx.accounts.deposit_mint.key())?;
 
     // Get and set up the deposit entry.
-    require!(
-        voter.deposits.len() > deposit_entry_index as usize,
+    require_gt!(
+        voter.deposits.len(),
+        deposit_entry_index as usize,
         VsrError::OutOfBoundsDepositEntryIndex
     );
     let d_entry = &mut voter.deposits[deposit_entry_index as usize];

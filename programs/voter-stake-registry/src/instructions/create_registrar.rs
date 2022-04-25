@@ -62,8 +62,9 @@ pub fn create_registrar(ctx: Context<CreateRegistrar>, registrar_bump: u8) -> Re
         &ctx.accounts.realm.to_account_info(),
         &registrar.realm_governing_token_mint,
     )?;
-    require!(
-        realm.authority.unwrap() == ctx.accounts.realm_authority.key(),
+    require_keys_eq!(
+        realm.authority.unwrap(),
+        ctx.accounts.realm_authority.key(),
         VsrError::InvalidRealmAuthority
     );
 

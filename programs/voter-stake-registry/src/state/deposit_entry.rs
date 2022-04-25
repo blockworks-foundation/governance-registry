@@ -93,8 +93,9 @@ impl DepositEntry {
             max_locked_vote_weight,
             voting_mint_config.lockup_saturation_secs,
         )?;
-        require!(
-            locked_vote_weight <= max_locked_vote_weight,
+        require_gte!(
+            max_locked_vote_weight,
+            locked_vote_weight,
             VsrError::InternalErrorBadLockupVoteWeight
         );
         baseline_vote_weight
@@ -362,8 +363,9 @@ impl DepositEntry {
     ///      periods_total() = 1
     pub fn resolve_vesting(&mut self, curr_ts: i64) -> Result<()> {
         let vested_amount = self.vested(curr_ts)?;
-        require!(
-            vested_amount <= self.amount_initially_locked_native,
+        require_gte!(
+            self.amount_initially_locked_native,
+            vested_amount,
             VsrError::InternalProgramError
         );
         self.amount_initially_locked_native = self
@@ -371,7 +373,7 @@ impl DepositEntry {
             .checked_sub(vested_amount)
             .unwrap();
         self.lockup.remove_past_periods(curr_ts)?;
-        require!(self.vested(curr_ts)? == 0, VsrError::InternalProgramError);
+        require_eq!(self.vested(curr_ts)?, 0, VsrError::InternalProgramError);
         Ok(())
     }
 }

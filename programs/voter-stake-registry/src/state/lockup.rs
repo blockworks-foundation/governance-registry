@@ -68,11 +68,12 @@ impl Lockup {
         start_ts: i64,
         periods: u32,
     ) -> Result<Self> {
-        require!(
-            start_ts < curr_ts + MAX_LOCKUP_IN_FUTURE_SECS,
+        require_gt!(
+            curr_ts + MAX_LOCKUP_IN_FUTURE_SECS,
+            start_ts,
             VsrError::DepositStartTooFarInFuture
         );
-        require!(periods <= MAX_LOCKUP_PERIODS, VsrError::InvalidLockupPeriod);
+        require_gte!(MAX_LOCKUP_PERIODS, periods, VsrError::InvalidLockupPeriod);
         Ok(Self {
             kind,
             start_ts,
@@ -138,10 +139,7 @@ impl Lockup {
         }
 
         let lockup_secs = self.seconds_left(self.start_ts);
-        require!(
-            lockup_secs % period_secs == 0,
-            VsrError::InvalidLockupPeriod
-        );
+        require_eq!(lockup_secs % period_secs, 0, VsrError::InvalidLockupPeriod);
 
         Ok(lockup_secs.checked_div(period_secs).unwrap())
     }
@@ -154,9 +152,10 @@ impl Lockup {
             .start_ts
             .checked_add(i64::try_from(periods.checked_mul(period_secs).unwrap()).unwrap())
             .unwrap();
-        require!(self.start_ts <= self.end_ts, VsrError::InternalProgramError);
-        require!(
-            self.period_current(curr_ts)? == 0,
+        require_gte!(self.end_ts, self.start_ts, VsrError::InternalProgramError);
+        require_eq!(
+            self.period_current(curr_ts)?,
+            0,
             VsrError::InternalProgramError
         );
         Ok(())

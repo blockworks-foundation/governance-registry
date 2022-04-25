@@ -39,16 +39,18 @@ pub fn internal_transfer_unlocked(
     let source_mint_idx = source.voting_mint_config_idx;
 
     // Reduce source amounts
-    require!(
-        amount <= source.amount_unlocked(curr_ts),
+    require_gte!(
+        source.amount_unlocked(curr_ts),
+        amount,
         VsrError::InsufficientUnlockedTokens
     );
     source.amount_deposited_native = source.amount_deposited_native.checked_sub(amount).unwrap();
 
     // Check target compatibility
     let target = voter.active_deposit_mut(target_deposit_entry_index)?;
-    require!(
-        target.voting_mint_config_idx == source_mint_idx,
+    require_eq!(
+        target.voting_mint_config_idx,
+        source_mint_idx,
         VsrError::InvalidMint
     );
 
