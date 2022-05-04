@@ -37,14 +37,13 @@ bytemuck = "1.9.1"
 spl-governance = { version = "=2.2.1", features = ["no-entrypoint"] }
 spl-governance-addin-api = "=0.1.1"
 
-# refer solana to the same version anchor-lang 0.20.1 refers to
-solana-program = "1.9.5"
+solana-program = "~1.9.13"
 static_assertions = "1.1"
 
 [dev-dependencies]
-solana-sdk = "1.9.5"
-solana-program-test = "1.9.5"
-solana-logger = "1.9.5"
+solana-sdk = "~1.9.13"
+solana-program-test = "~1.9.13"
+solana-logger = "~1.9.13"
 spl-token = { version = "^3.0.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^1.0.3", features = ["no-entrypoint"] }
 bytemuck = "^1.7.2"
