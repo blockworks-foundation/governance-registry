@@ -1,5 +1,10 @@
 # Voter Stake Registry Changelog
 
+## v0.2.4 - Unreleased
+
+### Program
+- Upgrade Anchor to v0.24.2
+
 ## v0.2.3 - 2022-4-29
 
 ### Program
