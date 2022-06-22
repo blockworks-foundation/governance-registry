@@ -27,6 +27,7 @@ pub struct CloseVoter<'info> {
     pub voter_authority: Signer<'info>,
 
     #[account(mut)]
+    /// CHECK: Destination may be any address.
     pub sol_destination: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,

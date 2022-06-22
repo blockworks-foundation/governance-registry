@@ -20,12 +20,13 @@ pub struct CreateRegistrar<'info> {
 
     /// An spl-governance realm
     ///
-    /// realm is validated in the instruction:
+    /// CHECK: realm is validated in the instruction:
     /// - realm is owned by the governance_program_id
     /// - realm_governing_token_mint must be the community or council mint
     /// - realm_authority is realm.authority
     pub realm: UncheckedAccount<'info>,
 
+    /// CHECK: May be any instance of spl-governance
     /// The program id of the spl-governance program the realm belongs to.
     pub governance_program_id: UncheckedAccount<'info>,
     /// Either the realm community mint or the council mint.

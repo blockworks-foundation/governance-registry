@@ -39,6 +39,7 @@ pub struct CreateVoter<'info> {
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 
+    /// CHECK: Address constraint is set
     #[account(address = tx_instructions::ID)]
     pub instructions: UncheckedAccount<'info>,
 }

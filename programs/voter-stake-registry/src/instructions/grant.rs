@@ -21,6 +21,7 @@ pub struct Grant<'info> {
 
     /// The account of the grantee / the address controlling the voter
     /// that the grant is going to.
+    /// CHECK: May be any address
     pub voter_authority: UncheckedAccount<'info>,
 
     /// The voter weight record is the account that will be shown to spl-governance

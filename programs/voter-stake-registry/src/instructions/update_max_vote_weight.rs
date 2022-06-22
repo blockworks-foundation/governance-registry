@@ -7,6 +7,7 @@ use anchor_lang::prelude::*;
 pub struct UpdateMaxVoteWeight<'info> {
     pub registrar: AccountLoader<'info, Registrar>,
     // TODO: SPL governance has not yet implemented this.
+    /// CHECK: TODO. Will be implemented when max_vote_weight_record is rolled out.
     pub max_vote_weight_record: UncheckedAccount<'info>,
 }
 

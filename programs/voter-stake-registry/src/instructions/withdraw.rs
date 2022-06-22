@@ -23,7 +23,7 @@ pub struct Withdraw<'info> {
     /// to be able to forbid withdraws while the voter is engaged with
     /// a vote or has an open proposal.
     ///
-    /// token_owner_record is validated in the instruction:
+    /// CHECK: token_owner_record is validated in the instruction:
     /// - owned by registrar.governance_program_id
     /// - for the registrar.realm
     /// - for the registrar.realm_governing_token_mint
