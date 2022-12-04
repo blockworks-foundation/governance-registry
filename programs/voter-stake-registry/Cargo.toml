@@ -21,8 +21,8 @@ test-bpf = []
 
 [dependencies]
 # a) for deployment use these
-anchor-lang = { version = "0.24.2", features = ["init-if-needed"] }
-anchor-spl = { version = "0.24.2" }
+anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
+anchor-spl = { version = "0.25.0" }
 # b) while testing, use below dependencies for debugging instead of above ones
 # anchor-lang = { git = "https://github.com/microwavedcola1/anchor.git", branch = "master-debug" }
 # anchor-spl = { git = "https://github.com/microwavedcola1/anchor.git", branch = "master-debug", features = ["governance"]}
@@ -39,18 +39,18 @@ bytemuck = "1.9.1"
 spl-governance = { version = "=2.2.1", features = ["no-entrypoint"] }
 spl-governance-addin-api = "=0.1.1"
 
-solana-program = "~1.9.13"
+solana-program = "1.9.13"
 static_assertions = "1.1"
 
 [dev-dependencies]
-solana-sdk = "~1.9.13"
-solana-program-test = "~1.9.13"
-solana-logger = "~1.9.13"
-spl-token = { version = "^3.0.0", features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "^1.0.3", features = ["no-entrypoint"] }
-bytemuck = "^1.7.2"
-serde = "^1.0"
-bincode = "^1.3.1"
+solana-sdk = "1.9.13"
+solana-program-test = "1.9.13"
+solana-logger = "1.9.13"
+spl-token = { version = "3.0.0", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "1.0.3", features = ["no-entrypoint"] }
+bytemuck = "1.7.2"
+serde = "1.0"
+bincode = "1.3.1"
 log = "0.4.14"
 env_logger = "0.9.0"
 base64 = "0.13.0"
