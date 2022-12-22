@@ -85,8 +85,7 @@ pub fn create_voter(
     voter.registrar = ctx.accounts.registrar.key();
 
     let voter_weight_record = &mut ctx.accounts.voter_weight_record;
-    voter_weight_record.account_discriminator =
-        spl_governance_addin_api::voter_weight::VoterWeightRecord::ACCOUNT_DISCRIMINATOR;
+    voter_weight_record.account_discriminator = VoterWeightRecord::VSR_ACCOUNT_DISCRIMINATOR;
     voter_weight_record.realm = registrar.realm;
     voter_weight_record.governing_token_mint = registrar.realm_governing_token_mint;
     voter_weight_record.governing_token_owner = voter_authority;
