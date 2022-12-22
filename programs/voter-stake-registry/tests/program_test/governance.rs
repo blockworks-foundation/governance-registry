@@ -179,7 +179,7 @@ impl GovernanceRealmCookie {
                     min_community_weight_to_create_proposal: 1000,
                     min_transaction_hold_up_time: 0,
                     voting_base_time: 10,
-                    community_vote_tipping: spl_governance::state::enums::VoteTipping::Disabled,
+                    community_vote_tipping: spl_governance::state::enums::VoteTipping::Strict,
                     min_council_weight_to_create_proposal: 1,
                     council_vote_threshold: spl_governance::state::enums::VoteThreshold::Disabled,
                     council_veto_vote_threshold:
@@ -241,7 +241,7 @@ impl GovernanceRealmCookie {
                     min_community_weight_to_create_proposal: 1000,
                     min_transaction_hold_up_time: 0,
                     voting_base_time: 10,
-                    community_vote_tipping: spl_governance::state::enums::VoteTipping::Disabled,
+                    community_vote_tipping: spl_governance::state::enums::VoteTipping::Strict,
                     min_council_weight_to_create_proposal: 1,
                     council_vote_threshold: spl_governance::state::enums::VoteThreshold::Disabled,
                     council_veto_vote_threshold:
@@ -390,8 +390,8 @@ impl GovernanceRealmCookie {
         beneficiary: Pubkey,
     ) -> std::result::Result<(), BanksClientError> {
         let instructions = vec![spl_governance::instruction::relinquish_vote(
-            &self.realm,
             &self.governance.program_id,
+            &self.realm,
             &governance,
             &proposal.address,
             &token_owner_record,

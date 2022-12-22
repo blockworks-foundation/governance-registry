@@ -9,7 +9,7 @@ use voter_stake_registry::state::LockupKind;
 mod program_test;
 
 #[allow(unaligned_references)]
-//#[tokio::test]ß
+#[tokio::test]
 async fn test_all_deposits() -> Result<(), TransportError> {
     let context = TestContext::new().await;
     let addin = &context.addin;
