@@ -148,8 +148,7 @@ pub fn grant(
         // Note that vote_weight_record is not an Anchor account, is_freshly_initialized()
         // would not work.
         let voter_weight_record = &mut ctx.accounts.voter_weight_record;
-        voter_weight_record.account_discriminator =
-            spl_governance_addin_api::voter_weight::VoterWeightRecord::ACCOUNT_DISCRIMINATOR;
+        voter_weight_record.account_discriminator = VoterWeightRecord::VSR_ACCOUNT_DISCRIMINATOR;
         voter_weight_record.realm = registrar.realm;
         voter_weight_record.governing_token_mint = registrar.realm_governing_token_mint;
         voter_weight_record.governing_token_owner = voter_authority;

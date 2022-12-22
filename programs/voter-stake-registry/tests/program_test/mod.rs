@@ -118,7 +118,7 @@ impl TestContext {
         let governance_program_id =
             Pubkey::from_str(&"GovernanceProgramTest1111111111111111111111").unwrap();
         test.add_program(
-            "spl_governance",
+            "spl_governance_3_1_0",
             governance_program_id,
             processor!(spl_governance::processor::process_instruction),
         );

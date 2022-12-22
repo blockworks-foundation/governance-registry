@@ -54,5 +54,10 @@ macro_rules! vote_weight_record {
                 &mut self.0
             }
         }
+
+        impl VoterWeightRecord {
+            // Use the legacy account discriminator for backward compatibility with pre v2.2.5 spl-gov instances
+            pub const VSR_ACCOUNT_DISCRIMINATOR: [u8; 8] = *b"2ef99b4b";
+        }
     };
 }
