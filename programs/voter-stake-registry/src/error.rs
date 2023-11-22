@@ -116,4 +116,10 @@ pub enum VsrError {
     // 6037 / 0x1795
     #[msg("")]
     InvalidTimestampArguments,
+    // 6038 / 0x1796
+    #[msg("")]
+    BadUnlockDepositAuthority,
+    // 6039 / 0x1797
+    #[msg("")]
+    MintConfigNotUsed,
 }

@@ -376,6 +376,11 @@ impl DepositEntry {
         require_eq!(self.vested(curr_ts)?, 0, VsrError::InternalProgramError);
         Ok(())
     }
+
+    /// Makes all unvested tokens vested. Changes the LockUp to None
+    pub fn unlock_deposit(&mut self) {
+        self.lockup = Lockup::default();
+    }
 }
 
 #[cfg(test)]

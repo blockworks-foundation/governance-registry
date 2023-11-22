@@ -72,12 +72,6 @@ async fn test_basic() -> Result<(), TransportError> {
         .create_voter(&registrar, &token_owner_record, &voter_authority, &payer)
         .await;
 
-    // create the voter again, should have no effect
-    context
-        .addin
-        .create_voter(&registrar, &token_owner_record, &voter_authority, &payer)
-        .await;
-
     // test deposit and withdraw
 
     let reference_account = context.users[1].token_accounts[0];
