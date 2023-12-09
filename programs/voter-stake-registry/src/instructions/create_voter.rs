@@ -1,6 +1,7 @@
 use crate::error::*;
 use crate::state::*;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::{get_stack_height, TRANSACTION_LEVEL_STACK_HEIGHT};
 use anchor_lang::solana_program::sysvar::instructions as tx_instructions;
 use std::mem::size_of;
 
@@ -39,6 +40,7 @@ pub struct CreateVoter<'info> {
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 
+    /// NOTE: this account is currently unused
     /// CHECK: Address constraint is set
     #[account(address = tx_instructions::ID)]
     pub instructions: UncheckedAccount<'info>,
@@ -57,16 +59,10 @@ pub fn create_voter(
     // Forbid creating voter accounts from CPI. The goal is to make automation
     // impossible that weakens some of the limitations intentionally imposed on
     // locked tokens.
-    {
-        let ixns = ctx.accounts.instructions.to_account_info();
-        let current_index = tx_instructions::load_current_index_checked(&ixns)? as usize;
-        let current_ixn = tx_instructions::load_instruction_at_checked(current_index, &ixns)?;
-        require_keys_eq!(
-            current_ixn.program_id,
-            *ctx.program_id,
-            VsrError::ForbiddenCpi
-        );
-    }
+    require!(
+        get_stack_height() == TRANSACTION_LEVEL_STACK_HEIGHT,
+        VsrError::ForbiddenCpi
+    );
 
     require_eq!(voter_bump, *ctx.bumps.get("voter").unwrap());
     require_eq!(
