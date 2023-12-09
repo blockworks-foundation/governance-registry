@@ -207,6 +207,12 @@ pub mod voter_stake_registry {
         instructions::close_voter(ctx)
     }
 
+    pub fn close_voter_v2<'key, 'accounts, 'remaining, 'info>(
+        ctx: Context<'key, 'accounts, 'remaining, 'info, CloseVoter<'info>>,
+    ) -> Result<()> {
+        instructions::close_voter_v2(ctx)
+    }
+
     pub fn log_voter_info(
         ctx: Context<LogVoterInfo>,
         deposit_entry_begin: u8,
