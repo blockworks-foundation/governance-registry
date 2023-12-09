@@ -21,8 +21,8 @@ pub struct UpdateMaxVoteWeight<'info> {
 pub fn update_max_vote_weight(ctx: Context<UpdateMaxVoteWeight>) -> Result<()> {
     let registrar = &ctx.accounts.registrar.load()?;
     let _max_vote_weight = registrar.max_vote_weight(ctx.remaining_accounts)?;
-    // TODO: SPL governance has not yet implemented this feature.
-    //       When it has, probably need to write the result into an account,
-    //       similar to VoterWeightRecord.
+
+    // TODO: Unfinished! Currently this does not work as an max vote weight plugin!
+
     Ok(())
 }

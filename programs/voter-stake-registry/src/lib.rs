@@ -220,8 +220,4 @@ pub mod voter_stake_registry {
     ) -> Result<()> {
         instructions::log_voter_info(ctx, deposit_entry_begin, deposit_entry_count)
     }
-
-    pub fn set_time_offset(ctx: Context<SetTimeOffset>, time_offset: i64) -> Result<()> {
-        instructions::set_time_offset(ctx, time_offset)
-    }
 }

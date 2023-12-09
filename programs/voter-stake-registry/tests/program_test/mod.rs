@@ -228,6 +228,7 @@ impl TestContext {
             addin: AddinCookie {
                 solana: solana.clone(),
                 program_id: addin_program_id,
+                time_offset: RefCell::new(0),
             },
             mints,
             users,
