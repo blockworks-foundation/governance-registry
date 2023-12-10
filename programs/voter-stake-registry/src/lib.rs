@@ -197,14 +197,16 @@ pub mod voter_stake_registry {
         instructions::update_voter_weight_record(ctx)
     }
 
-    pub fn update_max_vote_weight(ctx: Context<UpdateMaxVoteWeight>) -> Result<()> {
-        instructions::update_max_vote_weight(ctx)
-    }
-
     pub fn close_voter<'key, 'accounts, 'remaining, 'info>(
         ctx: Context<'key, 'accounts, 'remaining, 'info, CloseVoter<'info>>,
     ) -> Result<()> {
         instructions::close_voter(ctx)
+    }
+
+    pub fn close_voter_v2<'key, 'accounts, 'remaining, 'info>(
+        ctx: Context<'key, 'accounts, 'remaining, 'info, CloseVoter<'info>>,
+    ) -> Result<()> {
+        instructions::close_voter_v2(ctx)
     }
 
     pub fn log_voter_info(
@@ -213,9 +215,5 @@ pub mod voter_stake_registry {
         deposit_entry_count: u8,
     ) -> Result<()> {
         instructions::log_voter_info(ctx, deposit_entry_begin, deposit_entry_count)
-    }
-
-    pub fn set_time_offset(ctx: Context<SetTimeOffset>, time_offset: i64) -> Result<()> {
-        instructions::set_time_offset(ctx, time_offset)
     }
 }

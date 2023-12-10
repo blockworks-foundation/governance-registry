@@ -11,8 +11,6 @@ pub use internal_transfer_locked::*;
 pub use internal_transfer_unlocked::*;
 pub use log_voter_info::*;
 pub use reset_lockup::*;
-pub use set_time_offset::*;
-pub use update_max_vote_weight::*;
 pub use update_voter_weight_record::*;
 pub use withdraw::*;
 
@@ -29,7 +27,5 @@ mod internal_transfer_locked;
 mod internal_transfer_unlocked;
 mod log_voter_info;
 mod reset_lockup;
-mod set_time_offset;
-mod update_max_vote_weight;
 mod update_voter_weight_record;
 mod withdraw;

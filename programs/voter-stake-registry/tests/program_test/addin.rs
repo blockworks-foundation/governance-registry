@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::sync::Arc;
 
 use solana_sdk::pubkey::Pubkey;
@@ -13,6 +14,7 @@ use crate::*;
 pub struct AddinCookie {
     pub solana: Arc<solana::SolanaCookie>,
     pub program_id: Pubkey,
+    pub time_offset: RefCell<i64>,
 }
 
 pub struct RegistrarCookie {
@@ -537,6 +539,47 @@ impl AddinCookie {
             .await
     }
 
+    #[allow(dead_code)]
+    pub async fn close_voter_v2(
+        &self,
+        registrar: &RegistrarCookie,
+        voter: &VoterCookie,
+        voting_mint: &VotingMintConfigCookie,
+        voter_authority: &Keypair,
+        token_address: Pubkey,
+    ) -> std::result::Result<(), BanksClientError> {
+        let vault = voter.vault_address(&voting_mint);
+
+        let data =
+            anchor_lang::InstructionData::data(&voter_stake_registry::instruction::CloseVoterV2 {});
+
+        let mut accounts = anchor_lang::ToAccountMetas::to_account_metas(
+            &voter_stake_registry::accounts::CloseVoter {
+                registrar: registrar.address,
+                voter: voter.address,
+                voter_authority: voter_authority.pubkey(),
+                sol_destination: voter_authority.pubkey(),
+                token_program: spl_token::id(),
+            },
+            None,
+        );
+        accounts.push(anchor_lang::prelude::AccountMeta::new(vault, false));
+        accounts.push(anchor_lang::prelude::AccountMeta::new(token_address, false));
+
+        let instructions = vec![Instruction {
+            program_id: self.program_id,
+            accounts,
+            data,
+        }];
+
+        // clone the secrets
+        let signer = Keypair::from_base58_string(&voter_authority.to_base58_string());
+
+        self.solana
+            .process_transaction(&instructions, Some(&[&signer]))
+            .await
+    }
+
     pub fn update_voter_weight_record_instruction(
         &self,
         registrar: &RegistrarCookie,
@@ -774,36 +817,25 @@ impl AddinCookie {
     #[allow(dead_code)]
     pub async fn set_time_offset(
         &self,
-        registrar: &RegistrarCookie,
-        authority: &Keypair,
+        _registrar: &RegistrarCookie,
+        _authority: &Keypair,
         time_offset: i64,
     ) {
-        let data =
-            anchor_lang::InstructionData::data(&voter_stake_registry::instruction::SetTimeOffset {
-                time_offset,
-            });
+        let old_offset = *self.time_offset.borrow();
+        *self.time_offset.borrow_mut() = time_offset;
 
-        let accounts = anchor_lang::ToAccountMetas::to_account_metas(
-            &voter_stake_registry::accounts::SetTimeOffset {
-                registrar: registrar.address,
-                realm_authority: authority.pubkey(),
-            },
-            None,
-        );
-
-        let instructions = vec![Instruction {
-            program_id: self.program_id,
-            accounts,
-            data,
-        }];
-
-        // clone the secrets
-        let signer = Keypair::from_base58_string(&authority.to_base58_string());
-
-        self.solana
-            .process_transaction(&instructions, Some(&[&signer]))
+        let old_clock = self
+            .solana
+            .context
+            .borrow_mut()
+            .banks_client
+            .get_sysvar::<solana_program::clock::Clock>()
             .await
             .unwrap();
+
+        let mut new_clock = old_clock.clone();
+        new_clock.unix_timestamp += time_offset - old_offset;
+        self.solana.context.borrow_mut().set_sysvar(&new_clock);
     }
 }
 

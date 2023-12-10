@@ -12,9 +12,8 @@ async fn get_lockup_data(
     solana: &SolanaCookie,
     voter: Pubkey,
     index: u8,
-    time_offset: i64,
 ) -> (u64, u64, u64, u64, u64) {
-    let now = solana.get_clock().await.unix_timestamp + time_offset;
+    let now = solana.get_clock().await.unix_timestamp;
     let voter = solana
         .get_account::<voter_stake_registry::state::Voter>(voter)
         .await;
@@ -109,8 +108,7 @@ async fn test_reset_lockup() -> Result<(), TransportError> {
         *time_offset.borrow_mut() += extra as i64;
         addin.set_time_offset(&registrar, &realm_authority, *time_offset.borrow())
     };
-    let lockup_status =
-        |index: u8| get_lockup_data(&context.solana, voter.address, index, *time_offset.borrow());
+    let lockup_status = |index: u8| get_lockup_data(&context.solana, voter.address, index);
 
     let month = LockupKind::Monthly.period_secs();
     let day = 24 * 60 * 60;

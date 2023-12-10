@@ -37,6 +37,7 @@ pub fn internal_transfer_locked(
     target_deposit_entry_index: u8,
     amount: u64,
 ) -> Result<()> {
+    require_neq!(source_deposit_entry_index, target_deposit_entry_index);
     let registrar = &ctx.accounts.registrar.load()?;
     let voter = &mut ctx.accounts.voter.load_mut()?;
     let curr_ts = registrar.clock_unix_timestamp();
