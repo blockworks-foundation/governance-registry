@@ -30,6 +30,7 @@ impl SolanaCookie {
         *self.program_output.write().unwrap() = super::ProgramOutput::default();
 
         let mut context = self.context.borrow_mut();
+        let recent_blockhash = context.banks_client.get_latest_blockhash().await.unwrap();
 
         let old_blockhash = context.last_blockhash;
         let blockhash = context
@@ -47,14 +48,10 @@ impl SolanaCookie {
             all_signers.extend_from_slice(signers);
         }
 
-        // This fails when warping is involved - https://gitmemory.com/issue/solana-labs/solana/18201/868325078
-        // let recent_blockhash = self.context.banks_client.get_recent_blockhash().await.unwrap();
-
-        transaction.sign(&all_signers, context.last_blockhash);
-
+        transaction.sign(&all_signers, recent_blockhash);
         context
             .banks_client
-            .process_transaction_with_commitment(
+            .process_transaction_with_preflight_and_commitment(
                 transaction,
                 solana_sdk::commitment_config::CommitmentLevel::Processed,
             )
