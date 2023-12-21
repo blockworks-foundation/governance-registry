@@ -79,11 +79,13 @@ impl GovernanceCookie {
             &community_token_mint.pubkey.unwrap(),
             &payer.pubkey(),
             None,
-            Some(spl_governance::state::realm::GoverningTokenConfigAccountArgs {
-                voter_weight_addin: Some(*voter_weight_addin),
-                max_voter_weight_addin: None,
-                token_type: spl_governance::state::realm_config::GoverningTokenType::Liquid
-            }),
+            Some(
+                spl_governance::state::realm::GoverningTokenConfigAccountArgs {
+                    voter_weight_addin: Some(*voter_weight_addin),
+                    max_voter_weight_addin: None,
+                    token_type: spl_governance::state::realm_config::GoverningTokenType::Liquid,
+                },
+            ),
             None,
             name.to_string(),
             0,
@@ -170,16 +172,20 @@ impl GovernanceRealmCookie {
                 &authority.pubkey(),
                 Some(voter.voter_weight_record),
                 spl_governance::state::governance::GovernanceConfig {
-                    community_vote_threshold: spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
+                    community_vote_threshold:
+                        spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
                     min_community_weight_to_create_proposal: 1000,
                     min_transaction_hold_up_time: 0,
                     voting_base_time: 10,
                     community_vote_tipping: spl_governance::state::enums::VoteTipping::Disabled,
-                    council_vote_threshold: spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
-                    council_veto_vote_threshold: spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
+                    council_vote_threshold:
+                        spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
+                    council_veto_vote_threshold:
+                        spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
                     min_council_weight_to_create_proposal: 1,
                     council_vote_tipping: spl_governance::state::enums::VoteTipping::Disabled,
-                    community_veto_vote_threshold: spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
+                    community_veto_vote_threshold:
+                        spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
                     voting_cool_off_time: 0,
                     deposit_exempt_proposal_count: 10,
                 },
@@ -229,16 +235,20 @@ impl GovernanceRealmCookie {
                 &authority.pubkey(),
                 Some(voter.voter_weight_record),
                 spl_governance::state::governance::GovernanceConfig {
-                    community_vote_threshold: spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
+                    community_vote_threshold:
+                        spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
                     min_community_weight_to_create_proposal: 1000,
                     min_transaction_hold_up_time: 0,
                     voting_base_time: 10,
                     community_vote_tipping: spl_governance::state::enums::VoteTipping::Disabled,
-                    council_vote_threshold: spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
-                    council_veto_vote_threshold: spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
+                    council_vote_threshold:
+                        spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
+                    council_veto_vote_threshold:
+                        spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
                     min_council_weight_to_create_proposal: 1,
                     council_vote_tipping: spl_governance::state::enums::VoteTipping::Disabled,
-                    community_veto_vote_threshold: spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
+                    community_veto_vote_threshold:
+                        spl_governance::state::enums::VoteThreshold::YesVotePercentage(50),
                     voting_cool_off_time: 0,
                     deposit_exempt_proposal_count: 10,
                 },

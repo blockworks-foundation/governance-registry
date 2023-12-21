@@ -32,13 +32,6 @@ impl SolanaCookie {
         let mut context = self.context.borrow_mut();
         let recent_blockhash = context.banks_client.get_latest_blockhash().await.unwrap();
 
-        let old_blockhash = context.last_blockhash;
-        let blockhash = context
-            .banks_client
-            .get_new_latest_blockhash(&old_blockhash)
-            .await?;
-        context.last_blockhash = blockhash;
-
         let mut transaction =
             Transaction::new_with_payer(&instructions, Some(&context.payer.pubkey()));
 

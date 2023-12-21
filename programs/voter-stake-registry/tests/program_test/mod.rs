@@ -67,6 +67,14 @@ impl Log for LoggerWrapper {
             .starts_with("solana_runtime::message_processor")
         {
             let msg = record.args().to_string();
+
+            // Weird bug where logs are logged twice. Workaround by clearing on new invoke.
+            if msg.ends_with(&" invoke [1]") {
+                let mut lock = self.output.write().unwrap();
+                lock.logs.clear();
+                lock.data.clear();
+            }
+
             if let Some(data) = msg.strip_prefix("Program log: ") {
                 self.output.write().unwrap().logs.push(data.into());
             } else if let Some(data) = msg.strip_prefix("Program data: ") {
