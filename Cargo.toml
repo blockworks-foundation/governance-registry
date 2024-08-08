@@ -5,3 +5,7 @@ members = [
     # Otherwise the build will fail since Anchor uploads only parts of the source tree.
     "cli/"
 ]
+resolver = "1"
+
+[profile.release]
+overflow-checks = true

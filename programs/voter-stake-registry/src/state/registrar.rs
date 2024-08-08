@@ -41,8 +41,7 @@ impl Registrar {
             .position(|r| r.mint == mint)
             .ok_or_else(|| error!(VsrError::VotingMintNotFound))
     }
-
-    pub fn max_vote_weight(&self, mint_accounts: &[AccountInfo]) -> Result<u64> {
+    pub fn max_vote_weight<'a>(&self, mint_accounts: &'a [AccountInfo<'a>]) -> Result<u64> {
         self.voting_mints
             .iter()
             .try_fold(0u64, |mut sum, voting_mint_config| -> Result<u64> {

@@ -5,7 +5,7 @@ use anchor_lang::prelude::*;
 use spl_governance::state::token_owner_record;
 
 /// User account for minting voting rights.
-#[account(zero_copy)]
+#[account(zero_copy(unsafe))]
 pub struct Voter {
     pub voter_authority: Pubkey,
     pub registrar: Pubkey,

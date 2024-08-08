@@ -54,5 +54,16 @@ macro_rules! vote_weight_record {
                 &mut self.0
             }
         }
+
+        #[cfg(feature = "idl-build")]
+        impl anchor_lang::IdlBuild for VoterWeightRecord {}
+
+        impl anchor_lang::Discriminator for VoterWeightRecord {
+            const DISCRIMINATOR: [u8; 8] = [0; 8];
+            fn discriminator() -> [u8; 8] {
+                // legacy discriminator which is not compatible with Anchor but is used by older plugins
+                *b"2ef99b4b"
+            }
+        }
     };
 }

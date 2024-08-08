@@ -107,11 +107,7 @@ impl TestContext {
 
         let addin_program_id = voter_stake_registry::id();
 
-        let mut test = ProgramTest::new(
-            "voter_stake_registry",
-            addin_program_id,
-            processor!(voter_stake_registry::entry),
-        );
+        let mut test = ProgramTest::new("voter_stake_registry", addin_program_id, None);
         // intentionally set to half the limit, to catch potential problems early
         test.set_compute_max_units(120000);
 

@@ -1,6 +1,7 @@
 use crate::error::*;
 use crate::state::*;
 use anchor_lang::prelude::*;
+use anchor_lang::Discriminator;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use std::convert::TryFrom;
@@ -106,11 +107,8 @@ pub fn grant(
     allow_clawback: bool,
     amount: u64,
 ) -> Result<()> {
-    require_eq!(voter_bump, *ctx.bumps.get("voter").unwrap());
-    require_eq!(
-        voter_weight_record_bump,
-        *ctx.bumps.get("voter_weight_record").unwrap()
-    );
+    require_eq!(voter_bump, ctx.bumps.voter);
+    require_eq!(voter_weight_record_bump, ctx.bumps.voter_weight_record);
 
     // Load accounts.
     let registrar = &ctx.accounts.registrar.load()?;
@@ -148,8 +146,7 @@ pub fn grant(
         // Note that vote_weight_record is not an Anchor account, is_freshly_initialized()
         // would not work.
         let voter_weight_record = &mut ctx.accounts.voter_weight_record;
-        voter_weight_record.account_discriminator =
-            spl_governance_addin_api::voter_weight::VoterWeightRecord::ACCOUNT_DISCRIMINATOR;
+        voter_weight_record.account_discriminator = VoterWeightRecord::discriminator();
         voter_weight_record.realm = registrar.realm;
         voter_weight_record.governing_token_mint = registrar.realm_governing_token_mint;
         voter_weight_record.governing_token_owner = voter_authority;

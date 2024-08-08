@@ -33,7 +33,7 @@ Users can:
 # Development
 
 ## Rust
-* Built and developed using - rust stable(`rustc 1.57.0 (f1edd0429 2021-11-29)`)
+* Built and developed using - rust stable(`rustc 1.79.0 (129f3b996 2024-06-10)`)
 * Run rust based tests - `cargo test-sbf`
 * `run-generate-anchor-types.sh` generates latest anchor types file and writes to `./voter_stake_registry.ts`
 * To install the typescript client, do - `yarn add @blockworks-foundation/voter-stake-registry-client`

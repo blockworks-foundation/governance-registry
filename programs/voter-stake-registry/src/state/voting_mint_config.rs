@@ -1,5 +1,4 @@
 use crate::error::*;
-use anchor_lang::__private::bytemuck::Zeroable;
 use anchor_lang::prelude::*;
 use std::convert::TryFrom;
 
@@ -109,5 +108,3 @@ impl VotingMintConfig {
             || self.max_extra_lockup_vote_weight_scaled_factor > 0
     }
 }
-
-unsafe impl Zeroable for VotingMintConfig {}

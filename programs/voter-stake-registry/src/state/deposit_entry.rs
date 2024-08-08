@@ -6,7 +6,7 @@ use std::cmp::min;
 use std::convert::TryFrom;
 
 /// Bookkeeping for a single deposit for a given mint and lockup schedule.
-#[zero_copy]
+#[zero_copy(unsafe)]
 #[derive(Default)]
 pub struct DepositEntry {
     // Locked state.

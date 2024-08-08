@@ -276,6 +276,7 @@ async fn test_voting() -> Result<(), TransportError> {
             voter2.token_owner_record,
             &voter2_authority,
             payer.pubkey(),
+            realm.clone(),
         )
         .await
         .unwrap();

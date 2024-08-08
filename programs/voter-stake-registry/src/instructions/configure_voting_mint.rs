@@ -69,8 +69,8 @@ pub struct ConfigureVotingMint<'info> {
 ///    * B with digit_shift=0, baseline_vote_weight_scaled_factor=1e9, max_extra_lockup_vote_weight_scaled_factor=1e9
 /// to not lose precision on B tokens.
 ///
-pub fn configure_voting_mint(
-    ctx: Context<ConfigureVotingMint>,
+pub fn configure_voting_mint<'info>(
+    ctx: Context<'_, '_, 'info, 'info, ConfigureVotingMint<'info>>,
     idx: u16,
     digit_shift: i8,
     baseline_vote_weight_scaled_factor: u64,

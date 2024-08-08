@@ -68,8 +68,8 @@ pub mod voter_stake_registry {
         instructions::create_registrar(ctx, registrar_bump)
     }
 
-    pub fn configure_voting_mint(
-        ctx: Context<ConfigureVotingMint>,
+    pub fn configure_voting_mint<'info>(
+        ctx: Context<'_, '_, 'info, 'info, ConfigureVotingMint<'info>>,
         idx: u16,
         digit_shift: i8,
         baseline_vote_weight_scaled_factor: u64,
@@ -197,13 +197,13 @@ pub mod voter_stake_registry {
         instructions::update_voter_weight_record(ctx)
     }
 
-    pub fn update_max_vote_weight(ctx: Context<UpdateMaxVoteWeight>) -> Result<()> {
+    pub fn update_max_vote_weight<'info>(
+        ctx: Context<'_, '_, 'info, 'info, UpdateMaxVoteWeight<'info>>,
+    ) -> Result<()> {
         instructions::update_max_vote_weight(ctx)
     }
 
-    pub fn close_voter<'key, 'accounts, 'remaining, 'info>(
-        ctx: Context<'key, 'accounts, 'remaining, 'info, CloseVoter<'info>>,
-    ) -> Result<()> {
+    pub fn close_voter<'info>(ctx: Context<'_, '_, 'info, 'info, CloseVoter<'info>>) -> Result<()> {
         instructions::close_voter(ctx)
     }
 
